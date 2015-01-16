@@ -92,6 +92,23 @@ namespace Kiwi
              */
             ~Node();
             
+            //! The node creator.
+            /** This function create a new node.
+             @param context The context owner.
+             @param process The process of the node.
+             */
+            static inline sNode create(sContext context, sProcess process)
+            {
+                if(context && process)
+                {
+                    return make_shared<Node>(context, process);
+                }
+                else
+                {
+                    return nullptr;
+                }
+            }
+            
             //! Retrieve the context of the node.
             /** This function retrieves context of the node.
              @return The context of the node.

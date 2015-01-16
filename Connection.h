@@ -67,7 +67,7 @@ namespace Kiwi
                 ;
             }
             
-            //! Connection creator.
+            //! The connection creator.
             /** This function create a new connection.
              @param from    The output process.
              @param outlet  The index of the outlet.

@@ -46,23 +46,35 @@ namespace Kiwi
         
         void Context::add(sProcess process)
         {
-            lock_guard<mutex> guard(m_mutex);
-            
-        }
-        
-        void Context::remove(sProcess process)
-        {
-            
+            if(process)
+            {
+                lock_guard<mutex> guard(m_mutex);
+                auto it = find(m_nodes.begin(), m_nodes.end(), process);
+                if(it != m_nodes.end())
+                {
+                    m_nodes.push_back(Node::create(shared_from_this(), process));
+                }
+            }
         }
         
         void Context::add(sConnection connection)
         {
-            
-        }
-        
-        void Context::remove(sConnection connection)
-        {
-            
+            if(connection)
+            {
+                sProcess from   = connection->getProcessFrom();
+                sProcess to     = connection->getProcessTo();
+                if(from && to)
+                {
+                    lock_guard<mutex> guard(m_mutex);
+                    auto nodeFrom   = find(m_nodes.begin(), m_nodes.end(), from);
+                    auto nodeTo     = find(m_nodes.begin(), m_nodes.end(), to);
+                    if(nodeFrom != m_nodes.end() && nodeTo != m_nodes.end() && nodeFrom != nodeTo)
+                    {
+                        (*nodeFrom)->addOutput((*nodeTo), connection->getOutletIndex());
+                        (*nodeTo)->addOutput((*nodeFrom), connection->getInletIndex());
+                    }
+                }
+            }
         }
         
         void Context::indexNode(sNode node)
@@ -129,14 +141,6 @@ namespace Kiwi
             }
             
             m_nodes_temp.clear();
-        }
-        
-        void Context::tick()
-        {
-            for(vector<sNode>::size_type i = 0; i < m_nodes.size(); i++)
-            {
-                m_process[i]->tick();
-            }
         }
     }
 }

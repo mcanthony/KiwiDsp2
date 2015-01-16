@@ -44,8 +44,7 @@ namespace Kiwi
             const ulong       m_samplerate;
             const ulong       m_vectorsize;
             
-            vector<sNode>     m_process;
-            map<ulong, sNode> m_nodes;
+            vector<sNode>     m_nodes;
             set<sNode>        m_nodes_temp;
             ulong             m_index;
             mutable mutex     m_mutex;
@@ -97,7 +96,8 @@ namespace Kiwi
              */
             inline ulong getNumberOfNodes() const noexcept
             {
-                return m_nodes.size();
+                lock_guard<mutex> guard(m_mutex);
+                return (ulong)m_nodes.size();
             }
             
             //! Add a process to the dsp context.
@@ -106,23 +106,11 @@ namespace Kiwi
              */
             void add(sProcess process);
             
-            //! Remove a process from the dsp context.
-            /** The function removes a process from the dsp context.
-             @param process The process to remove.
-             */
-            void remove(sProcess process);
-            
             //! Add a connection to the dsp context.
             /** The function adds a connection to the dsp context.
              @param connection The connection to add.
              */
             void add(sConnection connection);
-            
-            //! Remove a connection from the dsp context.
-            /** The function removes a connection from the dsp context.
-             @param process The connection to remove.
-             */
-            void remove(sConnection connection);
             
             //! Compile the dsp context.
             /** The function sorts the dsp nodes and call the dsp methods of the processes.
@@ -132,7 +120,14 @@ namespace Kiwi
             //! Perform a tick on the dsp context.
             /** The function calls once all the process methods of the dsp nodes.
              */
-            void tick();
+            inline void tick() const
+            {
+                lock_guard<mutex> guard(m_mutex);
+                for(vector<sNode>::size_type i = 0; i < m_nodes.size(); i++)
+                {
+                    m_nodes[i]->tick();
+                }
+            }
         };
     }
 }
