@@ -22,7 +22,7 @@
 */
 
 
-#include ""
+#include "Noise.h"
 
 namespace Kiwi
 {

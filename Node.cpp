@@ -40,7 +40,11 @@ namespace Kiwi
         m_nins(process->getNumberOfInputs()),
         m_sample_ins(new sample*[m_nins]),
         m_nouts(process->getNumberOfOutputs()),
-        m_sample_outs(new sample*[m_nouts])
+        m_sample_outs(new sample*[m_nouts]),
+        
+        m_inplace(true),
+        m_shouldperform(false),
+        m_index(0)
         {
             m_node_ins.resize(m_nins);
             m_node_outs.resize(m_nouts);
@@ -66,6 +70,11 @@ namespace Kiwi
             m_signal_outs.clear();
         }
         
+        void Node::setIndex(const ulong index)
+        {
+            m_index = index;
+        }
+        
         void Node::addInput(sNode node, const ulong index)
         {
             if(index < (ulong)m_node_ins.size())
@@ -89,10 +98,7 @@ namespace Kiwi
         
         void Node::shouldPerform(const bool status) noexcept
         {
-            if(!status)
-            {
-                m_valid = status;
-            }
+            m_shouldperform = status;
         }
         
         sSignal Node::getOutputSignal(sNode node)
@@ -114,7 +120,7 @@ namespace Kiwi
                 for(auto it = m_node_ins[i].begin(); it != m_node_ins[i].end();)
                 {
                     sNode node = (*it).lock();
-                    if(!node || !node->isValid())
+                    if(!node || !node->shouldPerform())
                     {
                         it = m_node_ins[i].erase(it);
                     }
@@ -133,85 +139,70 @@ namespace Kiwi
         
         void Node::allocSignals()
         {
-            set<weak_ptr<Node>>::iterator it;
-            
-            // Inputs signals
             for(int i = 0; i < m_nins; i++)
             {
-                // We try to find a signal not borrowed
-                for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end() && !m_sig_ins[i]; ++it)
+                for(auto it = m_node_ins[i].begin(); it != m_node_ins[i].end() && !m_signal_ins[i]; ++it)
                 {
                     sNode node = (*it).lock();
                     if(node)
                     {
                         sSignal sig = node->getOutputSignal(shared_from_this());
-                        if(sig && !sig->isBorrowed()) // Can do this more if no inplace
+                        if(sig && !sig->isBorrowed())
                         {
-                            m_sig_ins[i] = make_shared<Signal>(sig, m_inplace);
+                            m_signal_ins[i] = Signal::create(sig, m_inplace);
                             break;
                         }
                     }
                 }
                 
-                // If we didn't find one
-                if(!m_sig_ins[i])
+                if(!m_signal_ins[i])
                 {
-                    sSignal sig = make_shared<Signal>(m_vectorsize);
-                    m_sig_ins[i] = sig;
-                    context->addSignal(sig);
-                }
-                
-                // We add copy
-                for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end(); ++it)
-                {
-                    sNode node = (*it).lock();
-                    if(node)
-                    {
-                        sSignal sig = node->getOutputSignal(shared_from_this());
-                        if(sig && (*(sig.get()) != *(m_sig_ins[i].get())))
-                        {
-                            shared_ptr<DspProcess> process = make_shared<DspProcess>(DspProcess::copy, nullptr, 1, 1, m_vectorsize);
-                            process->setInput(0, sig);
-                            process->setOutput(0, m_sig_ins[i]);
-                            context->addProcess(process);
-                        }
-                    }
+                    m_signal_ins[i] = Signal::create(m_vectorsize);
                 }
                 
             }
             
-            // Outputs signals
-            if(m_inplace)
+            for(int i = 0; i < m_nouts; i++)
             {
-                for(int i = 0; i < m_nouts; i++)
+                if(i < m_nins && m_inplace)
                 {
-                    if(i < m_nins)
-                    {
-                        m_sig_outs[i] = make_shared<Signal>(m_sig_ins[i], false);
-                    }
-                    else
-                    {
-                        sSignal sig = make_shared<Signal>(m_vectorsize);
-                        m_sig_outs[i] = sig;
-                        context->addSignal(sig);
-                    }
+                    m_signal_outs[i] = Signal::create(m_signal_ins[i], false);
                 }
-            }
-            else
-            {
-                for(int i = 0; i < m_nouts; i++)
+                else
                 {
-                    sSignal sig = make_shared<Signal>(m_vectorsize);
-                    m_sig_outs[i] = sig;
-                    context->addSignal(sig);
+                    sSignal sig = Signal::create(m_vectorsize);
                 }
             }
         }
         
         void Node::prepare()
         {
-           
-        }        
+            try
+            {
+                clean();
+            }
+            catch(sNode node)
+            {
+                throw node;
+            }
+            m_shouldperform = true;
+            m_process->prepare(shared_from_this());
+            if(shouldPerform())
+            {
+                allocSignals();
+            }
+        }
+        
+        void Node::tick() const
+        {
+            // Should copy inputs to inputs if necessary
+            m_process->perform(shared_from_this());
+        }
+        
+        void Node::stop() const
+        {
+            m_process->release(shared_from_this());
+        }
     }
 }
 

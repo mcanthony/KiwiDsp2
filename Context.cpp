@@ -128,7 +128,7 @@ namespace Kiwi
                 for(auto it = m_nodes.begin(); it != m_nodes.end(); ++it)
                 {
                     (*it)->prepare();
-                    if(!(*it)->isValid())
+                    if(!(*it)->shouldPerform())
                     {
                         it = m_nodes.erase(it);
                     }

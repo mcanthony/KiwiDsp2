@@ -125,6 +125,11 @@ namespace Kiwi
                     m_nodes[i]->tick();
                 }
             }
+            
+            //! Compile the dsp context.
+            /** The function sorts the dsp nodes and call the dsp methods of the processes.
+             */
+            void stop();
         };
     }
 }

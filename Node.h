@@ -60,15 +60,16 @@ namespace Kiwi
             vector<sSignal> m_signal_outs;
             
             bool            m_inplace;
-            bool            m_shouldprocess;
-            bool            m_valid;
+            bool            m_shouldperform;
             ulong           m_index;
 
             void setIndex(const ulong index);
             void addInput(sNode node, const ulong index);
             void addOutput(sNode node, const ulong index);
+            
             void prepare();
-            void tick() const noexcept;
+            void tick() const;
+            void stop() const;
             
             sSignal getOutputSignal(sNode node);
             void allocSignals();
@@ -157,6 +158,24 @@ namespace Kiwi
                 return m_nouts;
             }
             
+            //! Retrieve the inputs sample matrix.
+            /** This function retrieves the inputs sample matrix.
+             @return The inputs sample matrix.
+             */
+            inline sample *const *const getInputsSamples() const noexcept
+            {
+                return m_sample_ins;
+            }
+            
+            //! Retrieve the outputs sample matrix.
+            /** This function retrieves the outputs sample matrix.
+             @return The outputs sample matrix.
+             */
+            inline sample **const getOutputsSamples() const noexcept
+            {
+                return m_sample_outs;
+            }
+            
             //! Retrieve the index of the node in the dsp chain.
             /** This function retrieves the index of the node in the dsp chain. The index is for internal uses.
              @return The index of the node.
@@ -197,9 +216,9 @@ namespace Kiwi
             /** This checks if the node is valid.
              @return True if the node is valid otherwise it returns false.
              */
-            inline bool isValid() const noexcept
+            inline bool shouldPerform() const noexcept
             {
-                return m_valid;
+                return m_shouldperform;
             }
             
             //! Set if the inputs and outputs signals owns the same vectors.
