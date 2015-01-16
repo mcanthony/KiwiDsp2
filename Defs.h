@@ -64,12 +64,6 @@ namespace Kiwi
         typedef shared_ptr<const Signal>    scSignal;
         typedef weak_ptr<const Signal>      wcSignal;
         
-        class Node;
-        typedef shared_ptr<Node>            sNode;
-        typedef weak_ptr<Node>              wNode;
-        typedef shared_ptr<const Node>      scNode;
-        typedef weak_ptr<const Node>        wcNode;
-        
         class Process;
         typedef shared_ptr<Process>         sProcess;
         typedef weak_ptr<Process>           wProcess;
@@ -81,6 +75,18 @@ namespace Kiwi
         typedef weak_ptr<Connection>        wConnection;
         typedef shared_ptr<const Connection>scConnection;
         typedef weak_ptr<const Connection>  wcConnection;
+        
+        class Node;
+        typedef shared_ptr<Node>            sNode;
+        typedef weak_ptr<Node>              wNode;
+        typedef shared_ptr<const Node>      scNode;
+        typedef weak_ptr<const Node>        wcNode;
+        
+        class Context;
+        typedef shared_ptr<Context>         sContext;
+        typedef weak_ptr<Context>           wContext;
+        typedef shared_ptr<const Context>   scContext;
+        typedef weak_ptr<const Context>     wcContext;
     }
 };
 

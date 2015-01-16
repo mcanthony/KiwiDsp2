@@ -21,8 +21,7 @@
  ==============================================================================
 */
 
-#include "DspContext.h"
-#include "../KiwiBase/Box.h"
+#include "Context.h"
 
 namespace Kiwi
 {

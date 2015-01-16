@@ -67,6 +67,25 @@ namespace Kiwi
                 ;
             }
             
+            //! Connection creator.
+            /** This function create a new connection.
+             @param from    The output process.
+             @param outlet  The index of the outlet.
+             @param to      The input process.
+             @param inlet   The index of the inlet.
+             */
+            static inline sConnection create(const sProcess from, const ulong outlet, const sProcess to, const ulong inlet)
+            {
+                if(from && to)
+                {
+                    return make_shared<Connection>(from, outlet, to, inlet);
+                }
+                else
+                {
+                    return nullptr;
+                }
+            }
+            
             //! Retrieve the output process.
             /** The function retrieves the output process of the connection.
              @return The output process.

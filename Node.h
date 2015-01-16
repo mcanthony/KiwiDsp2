@@ -42,25 +42,29 @@ namespace Kiwi
         {
         private:
             typedef set<weak_ptr<Node>, owner_less< weak_ptr<Node>>> NodeSet;
-            const sBox   m_box;
-            const int               m_nins;
-            const int               m_nouts;
-            long                    m_vectorsize;
-            double                  m_samplerate;
             
-            vector<shared_ptr<Signal>> m_sig_ins;
-            vector<shared_ptr<Signal>> m_sig_outs;
+            const wcContext m_context;
+            const sProcess  m_process;
             
-            bool                    m_inplace;
+            const ulong     m_samplerate;
+            const ulong     m_vectorsize;
+            const ulong     m_nins;
+            sample**        m_sample_ins;
+            const ulong     m_nouts;
+            sample**        m_sample_outs;
             
-            bool                    m_valid;
-            int                     m_index;
+            vector<NodeSet> m_node_ins;
+            vector<NodeSet> m_node_outs;
+            vector<sSignal> m_signal_ins;
+            vector<sSignal> m_signal_outs;
             
-            vector<NodeSet>  m_inputs_nodes;
-            vector<NodeSet>  m_outputs_nodes;
-            
-            void prepare(shared_ptr<DspContext> context);
-            void allocSignals(shared_ptr<DspContext> context);
+            bool            m_inplace;
+            bool            m_shouldprocess;
+            bool            m_valid;
+            ulong           m_index;
+
+            void prepare(sContext context);
+            void allocSignals(sContext context);
             
             void addInput(weak_ptr<Node>, int inlet);
             void addOutput(weak_ptr<Node>, int outlet);
@@ -68,7 +72,7 @@ namespace Kiwi
             void removeInput(weak_ptr<Node>, int inlet);
             void removeOutput(weak_ptr<Node>, int outlet);
             
-            shared_ptr<Signal> getOutputSignal(shared_ptr<Node> inputnode);
+            sSignal getOutputSignal(shared_ptr<Node> inputnode);
             
             void clean();
             
@@ -77,54 +81,84 @@ namespace Kiwi
             //! The constructor.
             /** You should never use this method except if you really know what you're doing.
              */
-            Node(sBox);
+            Node(sContext context, sProcess process);
             
             //! The destructor.
             /** You should never use this method except if you really know what you're doing.
              */
             ~Node();
             
-            //! Add a process method to the node.
-            /** This function adds a process method to the node.
-             @param method The process method to add.
+            //! Retrieve the context of the node.
+            /** This function retrieves context of the node.
+             @return The context of the node.
              */
-            //void    addMethod(Method method);
+            inline scContext getContext() const noexcept
+            {
+                return m_context.lock();
+            }
+            
+            //! Retrieve the process of the node.
+            /** This function retrieves process of the node.
+             @return The process of the node.
+             */
+            inline scProcess getProcess() const noexcept
+            {
+                return static_pointer_cast<const Process>(m_process);
+            }
             
             //! Retrieve the sample rate of the node.
             /** This function retrieves the sample rate of the node.
              @return The sample rate of the node.
              */
-            double  getSamplerate() const noexcept;
+            inline ulong getSampleRate() const noexcept
+            {
+                return m_samplerate;
+            }
             
             //! Retrieve the vector size of the node.
             /** This function retrieves the vector size of the node.
              @return The vector size of the node.
              */
-            long    getVectorsize() const noexcept;
+            inline ulong getVectorSize() const noexcept
+            {
+                return m_vectorsize;
+            }
             
             //! Retrieve the number of inputs.
             /** This function retrieves the number of inputs.
              @return The number of inputs.
              */
-            int  getNumberOfInputs() const noexcept;
+            inline ulong getNumberOfInputs() const noexcept
+            {
+                return m_nins;
+            }
             
             //! Retrieve the number of outputs.
             /** This function retrieves the number of outputs.
              @return The number of outputs.
              */
-            int    getNumberOfOutputs() const noexcept;
+            inline ulong getNumberOfOutputs() const noexcept
+            {
+                return m_nouts;
+            }
             
             //! Check if a signal inlet is connected with signal.
             /** This function checks if a signal inlet is connected with signal.
              @return True if the inlet is connected otherwise it returns false.
              */
-            bool    isInputConnected(long index) const noexcept;
+            inline bool isInputConnected(const ulong index) const noexcept
+            {
+                return !m_node_ins[index].empty();
+            }
             
             //! Check if a signal outlet is connected with signal.
             /** This function checks if a signal outlet is connected with signal.
              @return True if the outlet is connected otherwise it returns false.
              */
-            bool    isOutputConnected(long index) const noexcept;
+            inline bool isOutputConnected(long index) const noexcept
+            {
+                return !m_node_outs[index].empty();
+            }
             
             //! Check if the inputs and outputs signals owns the same vectors.
             /** This function checks if the signals owns the same vectors.
