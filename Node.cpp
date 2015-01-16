@@ -22,6 +22,7 @@
 */
 
 #include "Node.h"
+#include "Context.h"
 
 namespace Kiwi
 {
@@ -31,79 +32,76 @@ namespace Kiwi
         //                                      DSP NODE                                    //
         // ================================================================================ //
         
-        Node::Node(sBox box) :
-        
-        m_box(box),
-        m_nins(0),
-        m_nouts(0),
-        
-        m_vectorsize(0),
-        m_samplerate(0),
-        
-        m_inplace(false),
-        m_valid(false),
-        m_index(-1)
-        
+        Node::Node(sContext context, sProcess process):
+        m_context(context),
+        m_process(process),
+        m_samplerate(context->getSampleRate()),
+        m_vectorsize(context->getVectorSize()),
+        m_nins(process->getNumberOfInputs()),
+        m_sample_ins(new sample*[m_nins]),
+        m_nouts(process->getNumberOfOutputs()),
+        m_sample_outs(new sample*[m_nouts])
         {
-            m_inputs_nodes.resize(m_nins);
-            m_outputs_nodes.resize(m_nouts);
+            m_node_ins.resize(m_nins);
+            m_node_outs.resize(m_nouts);
+            m_signal_ins.resize(m_nins);
+            m_signal_outs.resize(m_nins);
         }
         
         Node::~Node()
         {
-            int size;
-            size = (int)m_inputs_nodes.size();
-            for(int i = 0; i < size; i++)
-                m_inputs_nodes[i].clear();
-            m_inputs_nodes.clear();
-            
-            size = (int)m_outputs_nodes.size();
-            for(int i = 0; i < size; i++)
-                m_outputs_nodes[i].clear();
-            m_outputs_nodes.clear();
-            
-            m_processes.clear();
-            m_sig_ins.clear();
-            m_sig_outs.clear();
+            delete [] m_sample_ins;
+            delete [] m_sample_outs;
+            for(vector<NodeSet>::size_type i = 0; i < m_node_ins.size(); i++)
+            {
+                m_node_ins[i].clear();
+            }
+            for(vector<NodeSet>::size_type i = 0; i < m_node_outs.size(); i++)
+            {
+                m_node_outs[i].clear();
+            }
+            m_node_ins.clear();
+            m_node_outs.clear();
+            m_signal_ins.clear();
+            m_signal_outs.clear();
         }
         
-        void Node::addInput(weak_ptr<Node> node, int inlet)
+        void Node::addInput(sNode node, const ulong index)
         {
-            if(inlet >= 0 && inlet < m_nins)
-                m_inputs_nodes[inlet].insert(node);
+            if(index < (ulong)m_node_ins.size())
+            {
+                m_node_ins[index].insert(node);
+            }
         }
         
-        void Node::addOutput(weak_ptr<Node> node, int outlet)
+        void Node::addOutput(sNode node, const ulong index)
         {
-            if(outlet >= 0 && outlet < m_nouts)
-                m_outputs_nodes[outlet].insert(node);
+            if(index < (ulong)m_node_outs.size())
+            {
+                m_node_outs[index].insert(node);
+            }
         }
         
-        void Node::removeInput(weak_ptr<Node> node, int inlet)
-        {
-            if(inlet >= 0 && inlet < m_nins)
-                m_inputs_nodes[inlet].erase(node);
-        }
-        
-        void Node::removeOutput(weak_ptr<Node> node, int outlet)
-        {
-            if(outlet >= 0 && outlet < m_nouts)
-                m_outputs_nodes[outlet].erase(node);
-        }
-        
-        void Node::setInplace(bool status)
+        void Node::setInplace(const bool status) noexcept
         {
             m_inplace = status;
         }
         
-        shared_ptr<Signal> Node::getOutputSignal(shared_ptr<Node> inputnode)
+        void Node::shouldPerform(const bool status) noexcept
         {
-            int size = (int)m_outputs_nodes.size();
-            for(int i = 0; i < size; i++)
+            if(!status)
             {
-                if(m_outputs_nodes[i].find(inputnode) != m_outputs_nodes[i].end())
+                m_valid = status;
+            }
+        }
+        
+        sSignal Node::getOutputSignal(sNode node)
+        {
+            for(vector<NodeSet>::size_type i = 0; i < m_node_outs.size(); i++)
+            {
+                if(m_node_outs[i].find(node) != m_node_outs[i].end())
                 {
-                    return m_sig_outs[i];
+                    return m_signal_outs[i];
                 }
             }
             return nullptr;
@@ -111,24 +109,15 @@ namespace Kiwi
         
         void Node::clean()
         {
-            set<weak_ptr<Node>>::iterator it;
-            int size = (int)m_inputs_nodes.size();
-            for(int i = 0; i < size; i++)
+            for(vector<NodeSet>::size_type i = 0; i < m_node_ins.size(); i++)
             {
-                for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end(); )
+                for(auto it = m_node_ins[i].begin(); it != m_node_ins[i].end();)
                 {
-                    shared_ptr<Node> node = (*it).lock();
-                    // If the node has already been removed
-                    if(!node)
+                    sNode node = (*it).lock();
+                    if(!node || !node->isValid())
                     {
-                        m_inputs_nodes[i].erase(it++);
+                        it = m_node_ins[i].erase(it);
                     }
-                    // If the node isn't valid (it should has been already removed but... for secure)
-                    else if(!node->isValid())
-                    {
-                        m_inputs_nodes[i].erase(it++);
-                    }
-                    // If the node sample rate or vector size are wrong
                     else if((node->m_samplerate != m_samplerate) || (node->m_vectorsize != m_vectorsize))
                     {
                         throw node;
@@ -142,7 +131,7 @@ namespace Kiwi
             }
         }
         
-        void Node::allocSignals(shared_ptr<DspContext> context)
+        void Node::allocSignals()
         {
             set<weak_ptr<Node>>::iterator it;
             
@@ -152,10 +141,10 @@ namespace Kiwi
                 // We try to find a signal not borrowed
                 for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end() && !m_sig_ins[i]; ++it)
                 {
-                    shared_ptr<Node> node = (*it).lock();
+                    sNode node = (*it).lock();
                     if(node)
                     {
-                        shared_ptr<Signal> sig = node->getOutputSignal(shared_from_this());
+                        sSignal sig = node->getOutputSignal(shared_from_this());
                         if(sig && !sig->isBorrowed()) // Can do this more if no inplace
                         {
                             m_sig_ins[i] = make_shared<Signal>(sig, m_inplace);
@@ -167,7 +156,7 @@ namespace Kiwi
                 // If we didn't find one
                 if(!m_sig_ins[i])
                 {
-                    shared_ptr<Signal> sig = make_shared<Signal>(m_vectorsize);
+                    sSignal sig = make_shared<Signal>(m_vectorsize);
                     m_sig_ins[i] = sig;
                     context->addSignal(sig);
                 }
@@ -175,10 +164,10 @@ namespace Kiwi
                 // We add copy
                 for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end(); ++it)
                 {
-                    shared_ptr<Node> node = (*it).lock();
+                    sNode node = (*it).lock();
                     if(node)
                     {
-                        shared_ptr<Signal> sig = node->getOutputSignal(shared_from_this());
+                        sSignal sig = node->getOutputSignal(shared_from_this());
                         if(sig && (*(sig.get()) != *(m_sig_ins[i].get())))
                         {
                             shared_ptr<DspProcess> process = make_shared<DspProcess>(DspProcess::copy, nullptr, 1, 1, m_vectorsize);
@@ -202,7 +191,7 @@ namespace Kiwi
                     }
                     else
                     {
-                        shared_ptr<Signal> sig = make_shared<Signal>(m_vectorsize);
+                        sSignal sig = make_shared<Signal>(m_vectorsize);
                         m_sig_outs[i] = sig;
                         context->addSignal(sig);
                     }
@@ -212,43 +201,16 @@ namespace Kiwi
             {
                 for(int i = 0; i < m_nouts; i++)
                 {
-                    shared_ptr<Signal> sig = make_shared<Signal>(m_vectorsize);
+                    sSignal sig = make_shared<Signal>(m_vectorsize);
                     m_sig_outs[i] = sig;
                     context->addSignal(sig);
                 }
             }
         }
         
-        void Node::prepare(shared_ptr<DspContext> context)
+        void Node::prepare()
         {
-            m_valid         = false;
-            m_samplerate    = context->getSamplerate();
-            m_vectorsize    = context->getVectorsize();
-            
-            m_processes.clear();
-            m_sig_ins.clear();
-            m_sig_outs.clear();
-            m_sig_ins.resize(m_nins);
-            m_sig_outs.resize(m_nouts);
-            
-            clean();
-            /*
-             MethodDsp dspmethod = (MethodDsp)m_box->getMethod("dsp");
-             if(dspmethod)
-             dspmethod(m_box, shared_from_this());
-             
-             if(m_processes.size())
-             {
-             allocSignals(context);
-             for(int i = 0; i < m_processes.size(); i++)
-             {
-             shared_ptr<DspProcess> process = make_shared<DspProcess>(m_processes[i], m_box, m_nins, m_nouts, m_vectorsize);
-             process->setInputs(m_sig_ins);
-             process->setOutputs(m_sig_outs);
-             context->addProcess(process);
-             }
-             m_valid = true;
-             }*/
+           
         }        
     }
 }

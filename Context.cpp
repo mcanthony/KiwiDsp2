@@ -70,7 +70,7 @@ namespace Kiwi
                     if(nodeFrom != m_nodes.end() && nodeTo != m_nodes.end() && nodeFrom != nodeTo)
                     {
                         (*nodeFrom)->addOutput((*nodeTo), connection->getOutletIndex());
-                        (*nodeTo)->addOutput((*nodeFrom), connection->getInletIndex());
+                        (*nodeTo)->addInput((*nodeFrom), connection->getInletIndex());
                     }
                 }
             }

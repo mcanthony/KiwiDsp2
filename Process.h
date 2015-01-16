@@ -74,7 +74,7 @@ namespace Kiwi
             /** The method preprares the dsp.
              @param node The dsp node that owns the dsp informations and should be configured.
              */
-            virtual void prepare(scNode node) const noexcept = 0;
+            virtual void prepare(sNode node) const noexcept = 0;
             
             //! Perform the process for the dsp.
             /** The method performs the dsp.

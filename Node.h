@@ -42,8 +42,6 @@ namespace Kiwi
         {
         private:
             friend Context;
-            
-            void setIndex(const ulong index);
             typedef set<weak_ptr<Node>, owner_less< weak_ptr<Node>>> NodeSet;
             
             const wcContext m_context;
@@ -52,9 +50,9 @@ namespace Kiwi
             const ulong     m_samplerate;
             const ulong     m_vectorsize;
             const ulong     m_nins;
-            sample**        m_sample_ins;
+            sample** const  m_sample_ins;
             const ulong     m_nouts;
-            sample**        m_sample_outs;
+            sample** const  m_sample_outs;
             
             vector<NodeSet> m_node_ins;
             vector<NodeSet> m_node_outs;
@@ -66,18 +64,14 @@ namespace Kiwi
             bool            m_valid;
             ulong           m_index;
 
+            void setIndex(const ulong index);
+            void addInput(sNode node, const ulong index);
+            void addOutput(sNode node, const ulong index);
             void prepare();
             void tick() const noexcept;
-            void allocSignals(sContext context);
             
-            void addInput(weak_ptr<Node>, int inlet);
-            void addOutput(weak_ptr<Node>, int outlet);
-            
-            void removeInput(weak_ptr<Node>, int inlet);
-            void removeOutput(weak_ptr<Node>, int outlet);
-            
-            sSignal getOutputSignal(shared_ptr<Node> inputnode);
-            
+            sSignal getOutputSignal(sNode node);
+            void allocSignals();
             void clean();
             
         public:
@@ -163,6 +157,15 @@ namespace Kiwi
                 return m_nouts;
             }
             
+            //! Retrieve the index of the node in the dsp chain.
+            /** This function retrieves the index of the node in the dsp chain. The index is for internal uses.
+             @return The index of the node.
+             */
+            inline ulong getIndex() const noexcept
+            {
+                return m_index;
+            }
+            
             //! Check if a signal inlet is connected with signal.
             /** This function checks if a signal inlet is connected with signal.
              @return True if the inlet is connected otherwise it returns false.
@@ -185,21 +188,31 @@ namespace Kiwi
             /** This function checks if the signals owns the same vectors.
              @return True if the signals owns the same vectors it returns false.
              */
-            bool isInplace() const noexcept;
-            
-            //! Set if the inputs and outputs signals owns the same vectors.
-            /** This function sets if the signals owns the same vectors.
-             @param status The inplace status.
-             */
-            void setInplace(bool status);
+            inline bool isInplace() const noexcept
+            {
+                return m_inplace;
+            }
             
             //! Check if the node is valid.
             /** This checks if the node is valid.
              @return True if the node is valid otherwise it returns false.
              */
-            bool    isValid() const noexcept;
+            inline bool isValid() const noexcept
+            {
+                return m_valid;
+            }
             
-            ulong getIndex();
+            //! Set if the inputs and outputs signals owns the same vectors.
+            /** This function sets if the signals owns the same vectors.
+             @param status The inplace status.
+             */
+            void setInplace(const bool status) noexcept;
+            
+            //! Set if the node should be call in the dsp chain.
+            /** This function sets if the node should be call in the dsp chain.
+             @param status The perform status.
+             */
+            void shouldPerform(const bool status) noexcept;
         };
         
         static bool operator<(sNode node1, sNode node2) noexcept
