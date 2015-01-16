@@ -75,6 +75,12 @@ namespace Kiwi
         typedef weak_ptr<Process>           wProcess;
         typedef shared_ptr<const Process>   scProcess;
         typedef weak_ptr<const Process>     wcProcess;
+        
+        class Connection;
+        typedef shared_ptr<Connection>      sConnection;
+        typedef weak_ptr<Connection>        wConnection;
+        typedef shared_ptr<const Connection>scConnection;
+        typedef weak_ptr<const Connection>  wcConnection;
     }
 };
 
