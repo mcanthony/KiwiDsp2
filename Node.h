@@ -213,6 +213,18 @@ namespace Kiwi
                 return false;
             }
         }
+        
+        static bool operator==(sNode node, sProcess process) noexcept
+        {
+            if(node && process)
+            {
+                return node->getProcess() == process;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }
 

@@ -43,13 +43,10 @@ namespace Kiwi
         private:
             const ulong       m_samplerate;
             const ulong       m_vectorsize;
-            
             vector<sNode>     m_nodes;
-            set<sNode>        m_nodes_temp;
-            ulong             m_index;
             mutable mutex     m_mutex;
             
-            void indexNode(sNode node);
+            void sortNodes(set<sNode>& nodes, ulong& index, sNode node);
         public:
             
             //! The constructor.

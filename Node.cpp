@@ -31,7 +31,7 @@ namespace Kiwi
         //                                      DSP NODE                                    //
         // ================================================================================ //
         
-        DspNode::DspNode(sBox box) :
+        Node::Node(sBox box) :
         
         m_box(box),
         m_nins(0),
@@ -49,7 +49,7 @@ namespace Kiwi
             m_outputs_nodes.resize(m_nouts);
         }
         
-        DspNode::~DspNode()
+        Node::~Node()
         {
             int size;
             size = (int)m_inputs_nodes.size();
@@ -67,36 +67,36 @@ namespace Kiwi
             m_sig_outs.clear();
         }
         
-        void DspNode::addInput(weak_ptr<DspNode> node, int inlet)
+        void Node::addInput(weak_ptr<Node> node, int inlet)
         {
             if(inlet >= 0 && inlet < m_nins)
                 m_inputs_nodes[inlet].insert(node);
         }
         
-        void DspNode::addOutput(weak_ptr<DspNode> node, int outlet)
+        void Node::addOutput(weak_ptr<Node> node, int outlet)
         {
             if(outlet >= 0 && outlet < m_nouts)
                 m_outputs_nodes[outlet].insert(node);
         }
         
-        void DspNode::removeInput(weak_ptr<DspNode> node, int inlet)
+        void Node::removeInput(weak_ptr<Node> node, int inlet)
         {
             if(inlet >= 0 && inlet < m_nins)
                 m_inputs_nodes[inlet].erase(node);
         }
         
-        void DspNode::removeOutput(weak_ptr<DspNode> node, int outlet)
+        void Node::removeOutput(weak_ptr<Node> node, int outlet)
         {
             if(outlet >= 0 && outlet < m_nouts)
                 m_outputs_nodes[outlet].erase(node);
         }
         
-        void DspNode::setInplace(bool status)
+        void Node::setInplace(bool status)
         {
             m_inplace = status;
         }
         
-        shared_ptr<Signal> DspNode::getOutputSignal(shared_ptr<DspNode> inputnode)
+        shared_ptr<Signal> Node::getOutputSignal(shared_ptr<Node> inputnode)
         {
             int size = (int)m_outputs_nodes.size();
             for(int i = 0; i < size; i++)
@@ -109,15 +109,15 @@ namespace Kiwi
             return nullptr;
         }
         
-        void DspNode::clean()
+        void Node::clean()
         {
-            set<weak_ptr<DspNode>>::iterator it;
+            set<weak_ptr<Node>>::iterator it;
             int size = (int)m_inputs_nodes.size();
             for(int i = 0; i < size; i++)
             {
                 for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end(); )
                 {
-                    shared_ptr<DspNode> node = (*it).lock();
+                    shared_ptr<Node> node = (*it).lock();
                     // If the node has already been removed
                     if(!node)
                     {
@@ -142,9 +142,9 @@ namespace Kiwi
             }
         }
         
-        void DspNode::allocSignals(shared_ptr<DspContext> context)
+        void Node::allocSignals(shared_ptr<DspContext> context)
         {
-            set<weak_ptr<DspNode>>::iterator it;
+            set<weak_ptr<Node>>::iterator it;
             
             // Inputs signals
             for(int i = 0; i < m_nins; i++)
@@ -152,7 +152,7 @@ namespace Kiwi
                 // We try to find a signal not borrowed
                 for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end() && !m_sig_ins[i]; ++it)
                 {
-                    shared_ptr<DspNode> node = (*it).lock();
+                    shared_ptr<Node> node = (*it).lock();
                     if(node)
                     {
                         shared_ptr<Signal> sig = node->getOutputSignal(shared_from_this());
@@ -175,7 +175,7 @@ namespace Kiwi
                 // We add copy
                 for(it = m_inputs_nodes[i].begin(); it != m_inputs_nodes[i].end(); ++it)
                 {
-                    shared_ptr<DspNode> node = (*it).lock();
+                    shared_ptr<Node> node = (*it).lock();
                     if(node)
                     {
                         shared_ptr<Signal> sig = node->getOutputSignal(shared_from_this());
@@ -219,7 +219,7 @@ namespace Kiwi
             }
         }
         
-        void DspNode::prepare(shared_ptr<DspContext> context)
+        void Node::prepare(shared_ptr<DspContext> context)
         {
             m_valid         = false;
             m_samplerate    = context->getSamplerate();

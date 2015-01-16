@@ -41,7 +41,6 @@ namespace Kiwi
         Context::~Context()
         {
             m_nodes.clear();
-            m_nodes_temp.clear();
         }
         
         void Context::add(sProcess process)
@@ -77,11 +76,11 @@ namespace Kiwi
             }
         }
         
-        void Context::indexNode(sNode node)
+        void Context::sortNodes(set<sNode>& nodes, ulong& index, sNode node)
         {
             if(!node->getIndex())
             {
-                m_nodes_temp.insert(node);
+                nodes.insert(node);
                 for(vector<sNode>::size_type i = 0; i < m_nodes.size(); i++)
                 {
                     for(auto it = node->m_node_ins[i].begin(); it != node->m_node_ins[i].end(); ++it)
@@ -89,33 +88,33 @@ namespace Kiwi
                         sNode pnode = (*it).lock();
                         if(pnode && !pnode->m_index)
                         {
-                            if(m_nodes_temp.find(pnode) != m_nodes_temp.end())
+                            if(nodes.find(pnode) != nodes.end())
                             {
                                 throw pnode;
                             }
                             else
                             {
-                                indexNode(pnode);
+                                sortNodes(nodes, index, pnode);
                             }
                         }
                     }
                 }
-                node->setIndex(++m_index);
-                m_nodes_temp.erase(node);
+                node->setIndex(++index);
+                nodes.erase(node);
             }
         }
         
         void Context::compile()
         {
             lock_guard<mutex> guard(m_mutex);
-            m_index = 0;
-            m_nodes_temp.clear();
+            set<sNode> nodes;
+            ulong index = 0;
             
             try
             {
                 for(auto it = m_nodes.begin(); it != m_nodes.end(); ++it)
                 {
-                    indexNode((*it));
+                    sortNodes(nodes, index, (*it));
                 }
                 sort(m_nodes.begin(), m_nodes.end());
             }
@@ -140,7 +139,7 @@ namespace Kiwi
                 throw node->getProcess();
             }
             
-            m_nodes_temp.clear();
+            nodes.clear();
         }
     }
 }
