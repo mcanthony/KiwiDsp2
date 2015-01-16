@@ -24,92 +24,71 @@
 #ifndef __DEF_KIWI_DSP_PROCESS__
 #define __DEF_KIWI_DSP_PROCESS__
 
-#include "../KiwiBase/Defs.h"
-#include "../KiwiBase/Box.h"
 #include "Signal.h"
 
 namespace Kiwi
 {
-    class Box;
-    
-    // ================================================================================ //
-    //                                      DSP PROCESS                                 //
-    // ================================================================================ //
-    
-    //! The dsp process owns the method and the necessary members of one digital signal processing
-    /**
-     The dsp process performs the digital signal processing of a box, it is configured by the dsp node and called by the dsp context.
-     @see DspNode
-     @see DspContext
-     */
-    class DspProcess
+    namespace Dsp
     {
-    private:
-        typedef void (*MethodProcess)(sBox, long nins, sample const* const* ins, long nouts, sample** outs, long vectorsize);
+        // ================================================================================ //
+        //                                      DSP PROCESS                                 //
+        // ================================================================================ //
         
-        const MethodProcess     m_process;
-        const sBox   m_box;
-        const int               m_nins;
-        const int               m_nouts;
-        const long              m_vectorsize;
-        sample**                m_ins = nullptr;
-        sample**                m_outs = nullptr;
-    public:
-        
-        //! Constructor.
-        /** This function retrieves the default members and allocates the inputs and outputs matrices.
-         @param process     The process to call.
-         @param box         The box to linked ot the process.
-         @param nins        The number of input signals.
-         @param nouts       The number of output signals.
-         @param vectorsize  The vector size.
+        //! The dsp process performs a digital signal processing.
+        /**
+         The dsp process performs a digital signal processing. It is called and configured by a dsp node. The dsp process is a pure virtual class that owns the prototype of all the methods required for a digital signal processing.
          */
-        DspProcess(MethodProcess process, sBox box, int nins, int nouts, long vectorsize);
-        
-        //! Destructor.
-        /** This function shoulds free the matrices but we have an small error for the moment...
-         */
-        ~DspProcess();
-        
-        //! Set the input signal.
-        /** This function sets the input signal at a specific index.
-         @param index The input index.
-         @param input The input signal.
-         */
-        void setInput(int index, shared_ptr<Signal> &input);
-        
-        //! Set the input signals.
-        /** This function sets the input signals.
-         @param inputs The input signals.
-         */
-        void setInputs(vector<shared_ptr<Signal>> &inputs);
-        
-        //! Set the output signal.
-        /** This function sets the output signal at a specific index.
-         @param index The output index.
-         @param input The output signal.
-         */
-        void setOutput(int index, shared_ptr<Signal> &output);
-        
-        //! Set the output signals.
-        /** This function sets the output signals.
-         @param inputs The output signals.
-         */
-        void setOutputs(vector<shared_ptr<Signal>> &outputs);
-      
-        //! Call the process.
-        /** This function calls the process method.
-         */
-        inline void tick()
+        class Process
         {
-            m_process(m_box, m_nins, m_ins, m_nouts, m_outs, m_vectorsize);
-        }
-        
-        //! The copy default method.
-        /** The default process method to copy a vector to another one.
-         */
-        static void copy(sBox none, long nins, sample const* const* ins, long nouts, sample** outs, long vectorsize);
-    };
+        public:
+            
+            //! Constructor.
+            /** The method does nothing.
+             */
+            Process() noexcept
+            {
+                ;
+            }
+            
+            //! Destructor.
+            /** The method does nothing.
+             */
+            virtual ~Process()
+            {
+                ;
+            }
+            
+            //! Retrieve the number of inputs of the process.
+            /** The method retrieves the number of inputs of the process.
+             @return The number of inputs of the process.
+             */
+            virtual ulong getNumberOfInputs() const noexcept = 0;
+            
+            //! Retrieve the number of outputs of the process.
+            /** The method retrieves the number of outputs of the process.
+             @return The number of outputs of the process.
+             */
+            virtual ulong getNumberOfOutputs() const noexcept = 0;
+            
+            //! Prepare the process for the dsp.
+            /** The method preprares the dsp.
+             @param node The dsp node that owns the dsp informations and should be configured.
+             */
+            virtual void prepare(scNode node) const noexcept = 0;
+            
+            //! Perform the process for the dsp.
+            /** The method performs the dsp.
+             @param node The dsp node that owns the dsp informations and the signals.
+             */
+            virtual void perform(scNode node) const noexcept = 0;
+            
+            //! Release the process after the dsp.
+            /** The method releases the process after the dsp.
+             @param node The dsp node that owns the dsp informations.
+             */
+            virtual void release(scNode node) const noexcept = 0;
+        };
+    }
 }
 
 

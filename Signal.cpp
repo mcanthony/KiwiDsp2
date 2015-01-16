@@ -25,41 +25,27 @@
 
 namespace Kiwi
 {
-    // ================================================================================ //
-    //                                      SIGNAL                                      //
-    // ================================================================================ //
-    
-    Signal::Signal(int size)
+    namespace Dsp
     {
-        m_vector            = new sample[size];
-        m_borrowed          = false;
-        m_owner             = true;
-    }
-    
-    Signal::Signal(shared_ptr<Signal> sig, bool borrow)
-    {
-        m_vector            = sig->m_vector;
-        m_borrowed          = false;
-        m_owner             = false;
-        sig->m_borrowed     = borrow;
-    }
-    
-    Signal::~Signal()
-    {
-        if(m_owner && m_vector)
+        // ================================================================================ //
+        //                                      SIGNAL                                      //
+        // ================================================================================ //
+        
+        Signal::Signal(sample* const vector, const bool owner) noexcept :
+        m_vector(vector),
+        m_owner(owner),
+        m_borrowed(false)
         {
-            delete [] m_vector;
+            ;
         }
-    }
-    
-    sample* Signal::getVector()
-    {
-        return m_vector;
-    }
-    
-    bool Signal::isBorrowed()
-    {
-        return m_borrowed;
+        
+        Signal::~Signal()
+        {
+            if(m_owner && m_vector)
+            {
+                delete [] m_vector;
+            }
+        }
     }
 }
 
