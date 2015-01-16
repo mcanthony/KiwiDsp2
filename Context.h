@@ -44,7 +44,8 @@ namespace Kiwi
             const ulong       m_samplerate;
             const ulong       m_vectorsize;
             
-            vector<sNode>     m_nodes;
+            vector<sNode>     m_process;
+            map<ulong, sNode> m_nodes;
             set<sNode>        m_nodes_temp;
             ulong             m_index;
             mutable mutex     m_mutex;
@@ -55,7 +56,7 @@ namespace Kiwi
             //! The constructor.
             /** You should never use this method except if you really know what you're doing.
              */
-            Context(const ulong samplerate, const ulong vectorsize);
+            Context(const ulong samplerate, const ulong vectorsize) noexcept;
             
             //! The destructor.
             /** You should never use this method except if you really know what you're doing.
@@ -132,11 +133,6 @@ namespace Kiwi
             /** The function calls once all the process methods of the dsp nodes.
              */
             void tick();
-            
-            //! Clear the dsp context.
-            /** The function clears the dsp nodes and call the dsp methods of the processes.
-             */
-            void clear();
         };
     }
 }

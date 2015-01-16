@@ -41,6 +41,9 @@ namespace Kiwi
         class Node: public enable_shared_from_this<Node>
         {
         private:
+            friend Context;
+            
+            void setIndex(const ulong index);
             typedef set<weak_ptr<Node>, owner_less< weak_ptr<Node>>> NodeSet;
             
             const wcContext m_context;
@@ -63,7 +66,8 @@ namespace Kiwi
             bool            m_valid;
             ulong           m_index;
 
-            void prepare(sContext context);
+            void prepare();
+            void tick() const noexcept;
             void allocSignals(sContext context);
             
             void addInput(weak_ptr<Node>, int inlet);
@@ -177,7 +181,21 @@ namespace Kiwi
              @return True if the node is valid otherwise it returns false.
              */
             bool    isValid() const noexcept;
+            
+            ulong getIndex();
         };
+        
+        static bool operator<(sNode node1, sNode node2) noexcept
+        {
+            if(node1 && node2)
+            {
+                return node1->getIndex() < node2->getIndex();
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }
 
