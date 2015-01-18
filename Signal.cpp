@@ -27,25 +27,7 @@ namespace Kiwi
 {
     namespace Dsp
     {
-        // ================================================================================ //
-        //                                      SIGNAL                                      //
-        // ================================================================================ //
         
-        Signal::Signal(sample* const vector, const bool owner) noexcept :
-        m_vector(vector),
-        m_owner(owner),
-        m_borrowed(false)
-        {
-            ;
-        }
-        
-        Signal::~Signal()
-        {
-            if(m_owner && m_vector)
-            {
-                delete [] m_vector;
-            }
-        }
     }
 }
 

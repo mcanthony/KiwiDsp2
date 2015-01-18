@@ -69,8 +69,8 @@ namespace Kiwi
                     auto nodeTo     = find(m_nodes.begin(), m_nodes.end(), to);
                     if(nodeFrom != m_nodes.end() && nodeTo != m_nodes.end() && nodeFrom != nodeTo)
                     {
-                        (*nodeFrom)->addOutput((*nodeTo), connection->getOutletIndex());
-                        (*nodeTo)->addInput((*nodeFrom), connection->getInletIndex());
+                        (*nodeFrom)->addOutputNode((*nodeTo), connection->getOutletIndex());
+                        (*nodeTo)->addInputNode((*nodeFrom), connection->getInletIndex());
                     }
                 }
             }

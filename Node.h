@@ -44,6 +44,122 @@ namespace Kiwi
             friend Context;
             typedef set<weak_ptr<Node>, owner_less< weak_ptr<Node>>> NodeSet;
             
+            // ================================================================================ //
+            //                                      DSP OUTPUT                                  //
+            // ================================================================================ //
+            
+            //! The ouput manages the sample vectors of one ouput of a node.
+            /**
+             The ouput owns a vector of sample and manages the ownership and sharing of the vector between several dsp nodes.
+             */
+            class Output
+            {
+            private:
+                friend class Node;
+                
+                sample* const m_vector;
+                const bool    m_owner;
+                bool          m_borrowed;
+                
+            public:
+                //! Constructor.
+                /** You should never have to call this method.
+                 */
+                Output(sample* const vector, const bool owner) noexcept;
+                
+                //! Destructor.
+                /** You should never have to call this method.
+                 */
+                ~Output();
+                
+                //! Check if the vector is borrowed.
+                /** This function checks if the vector is borrowed.
+                 @return The borrowed status.
+                 */
+                inline bool isBorrowed() const noexcept
+                {
+                    return m_borrowed;
+                }
+                
+                //! Check if the output is the owner of the vector.
+                /** This function checks if the output is the owner of the vector.
+                 @return The owner status.
+                 */
+                inline bool isOwner() const noexcept
+                {
+                    return m_owner;
+                }
+                
+                //! Retrieve the vector of the output.
+                /** This function retrieves the vector of the output.
+                 @return The vector of the output.
+                 */
+                inline sample* getVector() const noexcept
+                {
+                    return m_vector;
+                }
+            };
+            
+            typedef shared_ptr<Output>  sOutput;
+            
+            // ================================================================================ //
+            //                                      DSP INPUT                                   //
+            // ================================================================================ //
+            
+            //! The input manages the sample vectors of one input of a node.
+            /**
+             The input owns a vector of sample and manages the ownership and sharing of the vector between several dsp nodes.
+             */
+            class Input
+            {
+            private:
+                friend class Node;
+                sample* const        m_vector;
+                const ulong          m_nothers;
+                sample *const *const m_others;
+                const ulong          m_size;
+                const bool           m_owner;
+            public:
+                //! Constructor.
+                /** You should never have to call this method.
+                 */
+                Input(const ulong size, sample* const vector, const ulong nothers, sample *const *const others, const bool owner) noexcept;
+                
+                //! Destructor.
+                /** You should never have to call this method.
+                 */
+                ~Input();
+                
+                //! Check if the input is the owner of the vector.
+                /** This function checks if the input is the owner of the vector.
+                 @return The owner status.
+                 */
+                inline bool isOwner() const noexcept
+                {
+                    return m_owner;
+                }
+                
+                //! Retrieve the vector of the input.
+                /** This function retrieves the vector of the input.
+                 @return The vector of the input.
+                 */
+                inline sample* getVector() const noexcept
+                {
+                    return m_vector;
+                }
+                
+                inline void perform() noexcept
+                {
+                    for(ulong i = 0; i < m_nothers; i++)
+                    {
+                        Signal::vadd(m_size, m_others[i], m_vector);
+                    }
+                }
+                
+            };
+            
+            typedef shared_ptr<Input>   sInput;
+            
             const wcContext m_context;
             const sProcess  m_process;
             
@@ -56,24 +172,33 @@ namespace Kiwi
             
             vector<NodeSet> m_node_ins;
             vector<NodeSet> m_node_outs;
-            vector<sSignal> m_signal_ins;
-            vector<sSignal> m_signal_outs;
+            vector<sInput>  m_inputs;
+            vector<sOutput> m_outputs;
             
             bool            m_inplace;
             bool            m_shouldperform;
             ulong           m_index;
 
             void setIndex(const ulong index);
-            void addInput(sNode node, const ulong index);
-            void addOutput(sNode node, const ulong index);
+            void addInputNode(sNode node, const ulong index);
+            void addOutputNode(sNode node, const ulong index);
             
             void prepare();
-            void tick() const;
+            
+            inline void tick() const
+            {
+                for(vector<sSignal>::size_type i = 0; i < m_inputs.size(); i++)
+                {
+                    m_inputs[i]->perform();
+                }
+                m_process->perform(shared_from_this());
+            }
+            
             void stop() const;
             
-            sSignal getOutputSignal(sNode node);
-            void allocSignals();
-            void clean();
+            sOutput getOutput(sNode node);
+            sOutput createOutput(const ulong index);
+            sInput createInput(const ulong index);
             
         public:
             
@@ -171,7 +296,7 @@ namespace Kiwi
             /** This function retrieves the outputs sample matrix.
              @return The outputs sample matrix.
              */
-            inline sample **const getOutputsSamples() const noexcept
+            inline sample** getOutputsSamples() const noexcept
             {
                 return m_sample_outs;
             }

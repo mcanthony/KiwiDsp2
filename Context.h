@@ -126,8 +126,8 @@ namespace Kiwi
                 }
             }
             
-            //! Compile the dsp context.
-            /** The function sorts the dsp nodes and call the dsp methods of the processes.
+            //! Stop the dsp.
+            /** The function call the stop the dsp of all the nodes.
              */
             void stop();
         };

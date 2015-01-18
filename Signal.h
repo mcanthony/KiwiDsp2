@@ -34,112 +34,140 @@ namespace Kiwi
         //                                      SIGNAL                                      //
         // ================================================================================ //
         
-        //! The signal manages the sample vectors.
+        //! The signal class offers static method to perform optimized operation with vectors of samples.
         /**
-         The signal owns a vector of sample and manages the ownership and sharing of the vector between several dsp nodes.
+          The signal class offers static method to perform optimized operation with vectors of samples. All the methods offer are prototyped for single or double precision. It use the apple vDSP functions, the blas or atlas libraries or native c.
          */
         class Signal
         {
-        private:
-            sample* const   m_vector;
-            const bool      m_owner;
-            bool            m_borrowed;
-            
         public:
             
-            //! Constructor.
-            /** You should never have to call this method.
-             */
-            Signal(sample* const vector, const bool owner) noexcept;
-            
-            //! Destructor.
-            /** You should never have to call this method.
-             */
-            ~Signal();
-            
-            //! Signal creator.
-            /** This function create a new signal.
-             @param size The size of the vector.
-             @return The signal.
-             */
-            static inline sSignal create(const ulong size)
+            static inline void vcopy(const ulong vectorsize, const float* in1, float* out1)
             {
-                sample* vec = new sample[size];
-                if(vec)
-                {
-                    return make_shared<Signal>(vec, true);
-                }
-                else
-                {
-                    return nullptr;
-                }
+#if defined (__APPLE__) || defined(__CBLAS__)
+                cblas_scopy((const int)vectorsize, in1, 1, out1, 1);
+#else
+                memcpy(out1, in1, vectorsize * sizeof(float));
+#endif
             }
             
-            //! Signal creator.
-            /** This function create a new signal from another one.
-             @param sig     The other signal.
-             @param borrow  If the other signal should be marked as borrowed.
-             @return The signal.
-             */
-            static inline sSignal create(sSignal sig, const bool borrow)
+            static inline void vcopy(const ulong vectorsize, const double* in1, double* out1)
             {
-                if(sig)
-                {
-                    sig->m_borrowed = borrow;
-                    return make_shared<Signal>(sig->getVector(), false);
-                }
-                else
-                {
-                    return nullptr;
-                }
+#if defined (__APPLE__) || defined(__CBLAS__)
+               cblas_dcopy((const int)vectorsize, in1, 1, out1, 1);
+#else
+                memcpy(out1, in1, vectorsize * sizeof(double));
+#endif
             }
             
-            //! Check if the vector is borrowed.
-            /** This function checks if the vector is borrowed.
-             @return The borrowed status.
-             */
-            inline bool isBorrowed() const noexcept
+            static inline void vfill(const ulong vectorsize, const float& in1, float* out1)
             {
-                return m_borrowed;
+#ifdef __APPLE__
+                vDSP_vfill(&in1, out1, 1, (vDSP_Length)vectorsize);
+#elif __CATLAS__
+                catlas_sset((const int)vectorsize, &in1, out1, 1);
+#else
+                while(vectorsize--)
+                    *(out1++) = in1;
+#endif
             }
             
-            //! Check if the signal is the owner of the vector.
-            /** This function checks if the signal is the owner of the vector.
-             @return The owner status.
-             */
-            inline bool isOwner() const noexcept
+            static inline void vfill(const ulong vectorsize, const double& in1, double* out1)
             {
-                return m_owner;
+#ifdef __APPLE__
+                vDSP_vfillD(&in1, out1, 1, (vDSP_Length)vectorsize);
+#elif __CATLAS__
+                catlas_sset((const int)vectorsize, &in1, out1, 1);
+#else
+                while(vectorsize--)
+                    *(out1++) = in1;
+#endif
             }
             
-            //! Retrieve the vector of the signal.
-            /** This function retrieves the vector of the signal.
-             @return The vector of the signal.
-             */
-            inline sample* getVector() const noexcept
+            static inline void vclear(const ulong vectorsize, float* out1)
             {
-                return m_vector;
+                
+#ifdef __APPLE__
+                vDSP_vclr(out1, 1, (vDSP_Length)vectorsize);
+#else
+                memset(out1, 0, vectorsize * sizeof(float));
+#endif
             }
             
-            //! Check if two signals have the same vector.
-            /** This function checks if two signals have the same vector.
-             @return true if the two signals have the same vector, otherwise false.
-             */
-            inline bool operator==(Signal &other) noexcept
+            static inline void vclear(const ulong vectorsize, double* out1)
             {
-                return other.m_vector == m_vector;
+#ifdef __APPLE__
+                vDSP_vclrD(out1, 1, (vDSP_Length)vectorsize);
+#else
+                memset(out1, 0, vectorsize * sizeof(double));
+#endif
             }
             
-            //! Check if two signals don't have the same vector.
-            /** This function checks if two signals don't have the same vector.
-             @return true if the two signals don't have the same vector, otherwise false.
-             */
-            inline bool operator!=(Signal &other) noexcept
+            static inline void vsadd(const ulong vectorsize, const float& in1, float* out1)
             {
-                return other.m_vector != m_vector;
+#ifdef __APPLE__
+                vDSP_vsadd(out1, 1, &in1, out1, 1, vectorsize);
+#else
+                while(vectorsize--)
+                    *(out1++) += in1;
+#endif
             }
             
+            static inline void vsadd(const ulong vectorsize, const double& in1, double* out1)
+            {
+#ifdef __APPLE__
+                vDSP_vsaddD(out1, 1, &in1, out1, 1, vectorsize);
+#else
+                while(vectorsize--)
+                    *(out1++) += in1;
+#endif
+            }
             
+            static inline void vadd(const ulong vectorsize, const float* in1, float* out1)
+            {
+#if defined (__APPLE__) || defined(__CBLAS__)
+                cblas_saxpy((const int)vectorsize, 1., in1, 1, out1, 1);
+#else
+                while(vectorsize--)
+                    *(out1++) += *(in1++);
+#endif
+            }
+            
+            static inline void vadd(const ulong vectorsize, const double* in1, double* out1)
+            {
+#if defined (__APPLE__) || defined(__CBLAS__)
+                cblas_daxpy((const int)vectorsize, 1., in1, 1, out1, 1);
+#else
+                while(vectorsize--)
+                    *(out1++) += *(in1++);
+#endif
+            }
+            
+            static inline void vadd(const ulong vectorsize, const float* in1, const float* in2, float* out1)
+            {
+#ifdef __APPLE__
+                vDSP_vadd(in1, 1, in2, 1, out1, 1, (vDSP_Length)vectorsize);
+#elif __CBLAS__
+                cblas_scopy(vectorsize, in1, 1, out1, 1);
+                cblas_saxpy(vectorsize, 1., in2, 1, out1, 1);
+#else
+                while(vectorsize--)
+                    *(out1++) = *(in1++) + *(in2++);
+#endif
+            }
+            
+            static inline void vadd(const ulong vectorsize, const double* in1, const double* in2, double* out1)
+            {
+#ifdef __APPLE__
+                vDSP_vaddD(in1, 1, in2, 1, out1, 1, (vDSP_Length)vectorsize);
+#elif __CBLAS__
+                cblas_dcopy(vectorsize, in1, 1, out1, 1);
+                cblas_daxpy(vectorsize, 1., in2, 1, out1, 1);
+#else
+                while(vectorsize--)
+                    *(out1++) = *(in1++) + *(in2++);
+#endif
+            }
         };
     }
 }

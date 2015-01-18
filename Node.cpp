@@ -28,6 +28,53 @@ namespace Kiwi
 {
     namespace Dsp
     {
+        
+        // ================================================================================ //
+        //                                      DSP OUTPUT                                  //
+        // ================================================================================ //
+        
+        Node::Output::Output(sample* const vector, const bool owner) noexcept :
+        m_vector(vector),
+        m_owner(owner),
+        m_borrowed(false)
+        {
+            ;
+        }
+        
+        Node::Output::~Output()
+        {
+            if(m_owner && m_vector)
+            {
+                delete [] m_vector;
+            }
+        }
+        
+        // ================================================================================ //
+        //                                      DSP INPUT                                   //
+        // ================================================================================ //
+        
+        Node::Input::Input(const ulong size, sample* const vector, const ulong nothers, sample *const *const others, const bool owner) noexcept :
+        m_vector(vector),
+        m_nothers(nothers),
+        m_others(others),
+        m_size(size),
+        m_owner(owner)
+        {
+            ;
+        }
+        
+        Node::Input::~Input()
+        {
+            if(m_nothers && m_others)
+            {
+                delete [] m_others;
+            }
+            if(m_owner && m_vector)
+            {
+                delete [] m_vector;
+            }
+        }
+        
         // ================================================================================ //
         //                                      DSP NODE                                    //
         // ================================================================================ //
@@ -48,8 +95,8 @@ namespace Kiwi
         {
             m_node_ins.resize(m_nins);
             m_node_outs.resize(m_nouts);
-            m_signal_ins.resize(m_nins);
-            m_signal_outs.resize(m_nins);
+            m_inputs.resize(m_nins);
+            m_outputs.resize(m_nins);
         }
         
         Node::~Node()
@@ -66,8 +113,8 @@ namespace Kiwi
             }
             m_node_ins.clear();
             m_node_outs.clear();
-            m_signal_ins.clear();
-            m_signal_outs.clear();
+            m_inputs.clear();
+            m_outputs.clear();
         }
         
         void Node::setIndex(const ulong index)
@@ -75,7 +122,7 @@ namespace Kiwi
             m_index = index;
         }
         
-        void Node::addInput(sNode node, const ulong index)
+        void Node::addInputNode(sNode node, const ulong index)
         {
             if(index < (ulong)m_node_ins.size())
             {
@@ -83,7 +130,7 @@ namespace Kiwi
             }
         }
         
-        void Node::addOutput(sNode node, const ulong index)
+        void Node::addOutputNode(sNode node, const ulong index)
         {
             if(index < (ulong)m_node_outs.size())
             {
@@ -101,19 +148,93 @@ namespace Kiwi
             m_shouldperform = status;
         }
         
-        sSignal Node::getOutputSignal(sNode node)
+        Node::sOutput Node::getOutput(sNode node)
         {
             for(vector<NodeSet>::size_type i = 0; i < m_node_outs.size(); i++)
             {
                 if(m_node_outs[i].find(node) != m_node_outs[i].end())
                 {
-                    return m_signal_outs[i];
+                    return m_outputs[i];
                 }
             }
             return nullptr;
         }
         
-        void Node::clean()
+        Node::sInput Node::createInput(const ulong index)
+        {
+            bool owner      = false;
+            NodeSet& set    = m_node_ins[index];
+            
+            sample*     vec     = nullptr;
+            sample**    others  = nullptr;
+            ulong       nothers = 0;
+            
+            for(auto it = set.begin(); it != set.end(); ++it)
+            {
+                sNode node = (*it).lock();
+                if(node)
+                {
+                    sOutput output = node->getOutput(node);
+                    if(output && !output->isBorrowed() && !vec)
+                    {
+                        output->m_borrowed = node->isInplace();
+                        vec = output->getVector();
+                    }
+                    else if(output)
+                    {
+                        nothers++;
+                    }
+                }
+            }
+            
+            others = new sample*[nothers];
+            nothers = 0;
+            for(auto it = set.begin(); it != set.end(); ++it)
+            {
+                sNode node = (*it).lock();
+                if(node)
+                {
+                    sOutput output = node->getOutput(node);
+                    if(output && output->getVector() != vec)
+                    {
+                        others[nothers++] = output->getVector();
+                    }
+                }
+            }
+            
+            if(!vec)
+            {
+                owner   = true;
+                vec     = new sample[getVectorSize()];
+            }
+            if(vec)
+            {
+                return make_shared<Input>(getVectorSize(), vec, nothers, others, true);
+            }
+            return nullptr;
+        }
+        
+        Node::sOutput Node::createOutput(const ulong index)
+        {
+            if(index < getNumberOfInputs() && isInplace())
+            {
+                return make_shared<Output>(m_inputs[index]->getVector(), false);
+            }
+            else
+            {
+                sample* vec = new sample[getVectorSize()];
+                if(vec)
+                {
+                    return make_shared<Output>(vec, true);
+                }
+                else
+                {
+                    return nullptr;
+                }
+            }
+        }
+        
+        void Node::prepare()
         {
             for(vector<NodeSet>::size_type i = 0; i < m_node_ins.size(); i++)
             {
@@ -135,70 +256,43 @@ namespace Kiwi
                     }
                 }
             }
-        }
-        
-        void Node::allocSignals()
-        {
-            for(int i = 0; i < m_nins; i++)
-            {
-                for(auto it = m_node_ins[i].begin(); it != m_node_ins[i].end() && !m_signal_ins[i]; ++it)
-                {
-                    sNode node = (*it).lock();
-                    if(node)
-                    {
-                        sSignal sig = node->getOutputSignal(shared_from_this());
-                        if(sig && !sig->isBorrowed())
-                        {
-                            m_signal_ins[i] = Signal::create(sig, m_inplace);
-                            break;
-                        }
-                    }
-                }
-                
-                if(!m_signal_ins[i])
-                {
-                    m_signal_ins[i] = Signal::create(m_vectorsize);
-                }
-                
-            }
             
-            for(int i = 0; i < m_nouts; i++)
-            {
-                if(i < m_nins && m_inplace)
-                {
-                    m_signal_outs[i] = Signal::create(m_signal_ins[i], false);
-                }
-                else
-                {
-                    sSignal sig = Signal::create(m_vectorsize);
-                }
-            }
-        }
-        
-        void Node::prepare()
-        {
-            try
-            {
-                clean();
-            }
-            catch(sNode node)
-            {
-                throw node;
-            }
             m_shouldperform = true;
             m_process->prepare(shared_from_this());
+            
             if(shouldPerform())
             {
-                allocSignals();
+                for(ulong i = 0; i < m_nins; i++)
+                {
+                    m_inputs[i] = createInput(i);
+                    if(m_outputs[i])
+                    {
+                        m_sample_outs[i] = m_outputs[i]->getVector();
+                    }
+                    else
+                    {
+                        m_shouldperform = false;
+                        throw shared_from_this();
+                        return;
+                    }
+                }
+                for(ulong i = 0; i < m_nouts; i++)
+                {
+                    m_outputs[i] = createOutput(i);
+                    if(m_outputs[i])
+                    {
+                        m_sample_outs[i] = m_outputs[i]->getVector();
+                    }
+                    else
+                    {
+                        m_shouldperform = false;
+                        throw shared_from_this();
+                        return;
+                    }
+                }
             }
         }
-        
-        void Node::tick() const
-        {
-            // Should copy inputs to inputs if necessary
-            m_process->perform(shared_from_this());
-        }
-        
+    
         void Node::stop() const
         {
             m_process->release(shared_from_this());
