@@ -19,13 +19,20 @@
  To release a closed-source product which uses KIWI, contact : guillotpierre6@gmail.com
  
  ==============================================================================
- */
+*/
 
-#ifndef __DEF_KIWI_DSP__
-#define __DEF_KIWI_DSP__
+#ifndef __DEF_KIWI_DSP_FILTER__
+#define __DEF_KIWI_DSP_FILTER__
 
-#include "Context.h"
-#include "Modules/Generator.h"
+#include "../Context.h"
+
+namespace Kiwi
+{
+    namespace Dsp
+    {
+        ;
+    }
+}
 
 #endif
 

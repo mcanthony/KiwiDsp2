@@ -19,13 +19,34 @@
  To release a closed-source product which uses KIWI, contact : guillotpierre6@gmail.com
  
  ==============================================================================
- */
+*/
 
-#ifndef __DEF_KIWI_DSP__
-#define __DEF_KIWI_DSP__
+#ifndef __DEF_KIWI_DSP_GENERATOR__
+#define __DEF_KIWI_DSP_GENERATOR__
 
-#include "Context.h"
-#include "Modules/Generator.h"
+#include "../Context.h"
+
+namespace Kiwi
+{
+    namespace Dsp
+    {
+        class Sig : public Process
+        {
+        private:
+            sample m_value;
+        public:
+            Sig(const sample value = 0.) noexcept;
+            ~Sig();
+            ulong getNumberOfInputs() const noexcept override;
+            ulong getNumberOfOutputs() const noexcept override;
+            void prepare(sNode node) const noexcept override;
+            void perform(scNode node) const noexcept override;
+            void release(scNode node) const noexcept override;
+            void setValue(const sample value) noexcept;
+            sample getValue() const noexcept;
+        };
+    }
+}
 
 #endif
 
