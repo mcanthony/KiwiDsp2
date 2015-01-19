@@ -42,6 +42,10 @@ namespace Kiwi
         {
         private:
             friend Context;
+            class Output;
+            class Input;
+            typedef shared_ptr<Output>  sOutput;
+            typedef shared_ptr<Input>   sInput;
             typedef set<weak_ptr<Node>, owner_less< weak_ptr<Node>>> NodeSet;
             
             // ================================================================================ //
@@ -55,30 +59,77 @@ namespace Kiwi
             class Output
             {
             private:
-                friend class Node;
-                
-                sample* const m_vector;
-                const bool    m_owner;
-                bool          m_borrowed;
+                friend Context;
+                const wNode   m_node;
+                const ulong   m_index;
+                sample*       m_vector;
+                bool          m_owner;
+                NodeSet       m_connections;
                 
             public:
                 //! Constructor.
                 /** You should never have to call this method.
                  */
-                Output(sample* const vector, const bool owner) noexcept;
+                Output(sNode node, const ulong index) noexcept;
                 
                 //! Destructor.
                 /** You should never have to call this method.
                  */
                 ~Output();
                 
-                //! Check if the vector is borrowed.
-                /** This function checks if the vector is borrowed.
-                 @return The borrowed status.
+                //! The output creator.
+                /** This method create an output.
+                 @param node The owner node.
+                 @return The output.
                  */
-                inline bool isBorrowed() const noexcept
+                static sOutput create(sNode owner, const ulong index) noexcept
                 {
-                    return m_borrowed;
+                    if(owner)
+                    {
+                        return make_shared<Output>(owner, index);
+                    }
+                    else
+                    {
+                        return nullptr;
+                    }
+                }
+                
+                //! Add a node to the output.
+                /** This function adds a node to the output.
+                 @param The node to add.
+                 */
+                void addNode(sNode node);
+                
+                //! Prepare the output.
+                /** This function prepare the output.
+                 */
+                void prepare();
+                
+                //! Retrieve if the connections are empty.
+                /** This function retrieves if the connections are empty.
+                 @param true if if the connections are empty, otherwise false.
+                 */
+                inline bool empty() const noexcept
+                {
+                    return m_connections.empty();
+                }
+                
+                //! Retrieve the number of connections.
+                /** This function retrieves the number of connections.
+                 @param The number of connections.
+                 */
+                inline ulong size() const noexcept
+                {
+                    return (ulong)m_connections.size();
+                }
+                
+                //! Retrieve if the output has a node.
+                /** This function retrieves if the output has a node.
+                 @param true if the output has a node, otherwise false.
+                 */
+                inline bool hasNode(sNode node) const
+                {
+                    return m_connections.find(node) != m_connections.end();
                 }
                 
                 //! Check if the output is the owner of the vector.
@@ -100,8 +151,6 @@ namespace Kiwi
                 }
             };
             
-            typedef shared_ptr<Output>  sOutput;
-            
             // ================================================================================ //
             //                                      DSP INPUT                                   //
             // ================================================================================ //
@@ -113,30 +162,70 @@ namespace Kiwi
             class Input
             {
             private:
-                friend class Node;
-                sample* const        m_vector;
-                const ulong          m_nothers;
-                sample *const *const m_others;
-                const ulong          m_size;
-                const bool           m_owner;
+                friend Context;
+                const wNode   m_node;
+                const ulong   m_index;
+                const ulong   m_size;
+                sample*       m_vector;
+                ulong         m_nothers;
+                sample**      m_others;
+                NodeSet       m_connections;
             public:
+                
                 //! Constructor.
                 /** You should never have to call this method.
                  */
-                Input(const ulong size, sample* const vector, const ulong nothers, sample *const *const others, const bool owner) noexcept;
+                Input(sNode node, const ulong index) noexcept;
                 
                 //! Destructor.
                 /** You should never have to call this method.
                  */
                 ~Input();
                 
-                //! Check if the input is the owner of the vector.
-                /** This function checks if the input is the owner of the vector.
-                 @return The owner status.
+                //! The output creator.
+                /** This method create an output.
+                 @param node The owner node.
+                 @return The output.
                  */
-                inline bool isOwner() const noexcept
+                static sInput create(sNode owner, const ulong index) noexcept
                 {
-                    return m_owner;
+                    if(owner)
+                    {
+                        return make_shared<Input>(owner, index);
+                    }
+                    else
+                    {
+                        return nullptr;
+                    }
+                }
+                
+                //! Add a node to the input.
+                /** This adds  a node to the input.
+                 @param The node to add.
+                 */
+                void addNode(sNode node);
+                
+                //! Prepare the input.
+                /** This function prepare the input.
+                 */
+                void prepare();
+                
+                //! Retrieve if the connections are empty.
+                /** This function retrieves if the connections are empty.
+                 @param true if if the connections are empty, otherwise false.
+                 */
+                inline bool empty() const noexcept
+                {
+                    return m_connections.empty();
+                }
+                
+                //! Retrieve the number of connections.
+                /** This function retrieves the number of connections.
+                 @param The number of connections.
+                 */
+                inline ulong size() const noexcept
+                {
+                    return (ulong)m_connections.size();
                 }
                 
                 //! Retrieve the vector of the input.
@@ -148,17 +237,22 @@ namespace Kiwi
                     return m_vector;
                 }
                 
+                //! Perform the copy of the connections to input vector.
+                /** This function perform sthe copy of the connections to input vector.
+                 */
                 inline void perform() noexcept
                 {
-                    for(ulong i = 0; i < m_nothers; i++)
+                    if(m_nothers)
+                    {
+                        Signal::vcopy(m_size, m_others[0], m_vector);
+                    }
+                    for(ulong i = 1; i < m_nothers; i++)
                     {
                         Signal::vadd(m_size, m_others[i], m_vector);
                     }
                 }
                 
             };
-            
-            typedef shared_ptr<Input>   sInput;
             
             const wcContext m_context;
             const sProcess  m_process;
@@ -169,9 +263,6 @@ namespace Kiwi
             sample** const  m_sample_ins;
             const ulong     m_nouts;
             sample** const  m_sample_outs;
-            
-            vector<NodeSet> m_node_ins;
-            vector<NodeSet> m_node_outs;
             vector<sInput>  m_inputs;
             vector<sOutput> m_outputs;
             
@@ -180,8 +271,6 @@ namespace Kiwi
             ulong           m_index;
 
             void setIndex(const ulong index);
-            void addInputNode(sNode node, const ulong index);
-            void addOutputNode(sNode node, const ulong index);
             
             void prepare();
             
@@ -195,10 +284,6 @@ namespace Kiwi
             }
             
             void stop() const;
-            
-            sOutput getOutput(sNode node);
-            sOutput createOutput(const ulong index);
-            sInput createInput(const ulong index);
             
         public:
             
@@ -221,13 +306,39 @@ namespace Kiwi
             {
                 if(context && process)
                 {
-                    return make_shared<Node>(context, process);
+                    sNode node = make_shared<Node>(context, process);
+                    if(node)
+                    {
+                        for(ulong i = 0; i < node->m_nins; i++)
+                        {
+                            node->m_inputs.push_back(Input::create(node, i));
+                        }
+                        for(ulong i = 0; i < node->m_nouts; i++)
+                        {
+                            node->m_outputs.push_back(Output::create(node, i));
+                        }
+                    }
+                    return node;
                 }
                 else
                 {
                     return nullptr;
                 }
             }
+            
+            //! Add a node to an input.
+            /** This function adds a node to an input.
+             @param node The node to add.
+             @param index The index of the input.
+             */
+            void addInputNode(sNode node, const ulong index);
+            
+            //! Add a node to an output.
+            /** This function adds a node to an output.
+             @param node The node to add.
+             @param index The index of the output.
+             */
+            void addOutputNode(sNode node, const ulong index);
             
             //! Retrieve the context of the node.
             /** This function retrieves context of the node.
@@ -316,7 +427,7 @@ namespace Kiwi
              */
             inline bool isInputConnected(const ulong index) const noexcept
             {
-                return !m_node_ins[index].empty();
+                return !m_inputs[index]->empty();
             }
             
             //! Check if a signal outlet is connected with signal.
@@ -325,7 +436,7 @@ namespace Kiwi
              */
             inline bool isOutputConnected(long index) const noexcept
             {
-                return !m_node_outs[index].empty();
+                return !m_outputs[index]->empty();
             }
             
             //! Check if the inputs and outputs signals owns the same vectors.

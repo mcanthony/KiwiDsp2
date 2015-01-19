@@ -81,9 +81,9 @@ namespace Kiwi
             if(!node->getIndex())
             {
                 nodes.insert(node);
-                for(vector<sNode>::size_type i = 0; i < m_nodes.size(); i++)
+                for(vector<sNode>::size_type i = 0; i < node->getNumberOfInputs(); i++)
                 {
-                    for(auto it = node->m_node_ins[i].begin(); it != node->m_node_ins[i].end(); ++it)
+                    for(auto it = node->m_inputs[i]->m_connections.begin(); it != node->m_inputs[i]->m_connections.end(); ++it)
                     {
                         sNode pnode = (*it).lock();
                         if(pnode && !pnode->m_index)
