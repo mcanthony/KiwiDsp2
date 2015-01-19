@@ -141,6 +141,15 @@ namespace Kiwi
             
             nodes.clear();
         }
+        
+        void Context::stop()
+        {
+            lock_guard<mutex> guard(m_mutex);
+            for(vector<sNode>::size_type i = 0; i < m_nodes.size(); i++)
+            {
+                m_nodes[i]->stop();
+            }
+        }
     }
 }
 
