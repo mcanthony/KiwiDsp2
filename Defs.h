@@ -49,7 +49,10 @@ using namespace std;
 
 namespace Kiwi
 {
+#ifndef ulong
     typedef unsigned long ulong;
+#endif
+    
     namespace Dsp
     {
 #ifdef KIWI_DOUBLE
