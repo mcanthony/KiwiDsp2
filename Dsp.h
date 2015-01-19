@@ -19,15 +19,13 @@
  To release a closed-source product which uses KIWI, contact : guillotpierre6@gmail.com
  
  ==============================================================================
-*/
+ */
 
-#ifndef __DEF_KIWI_OSCILLATORS__
-#define __DEF_KIWI_OSCILLATORS__
+#ifndef __DEF_KIWI_DSP__
+#define __DEF_KIWI_DSP__
 
-namespace Kiwi
-{
-    ;
-}
+#include "Context.h"
+#include "Modules/Noise.h"
 
 #endif
 
