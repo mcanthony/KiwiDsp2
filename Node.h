@@ -270,20 +270,7 @@ namespace Kiwi
             bool            m_shouldperform;
             ulong           m_index;
 
-            void setIndex(const ulong index);
-            
-            void prepare();
-            
-            inline void tick() const
-            {
-                for(vector<sSignal>::size_type i = 0; i < m_inputs.size(); i++)
-                {
-                    m_inputs[i]->perform();
-                }
-                m_process->perform(shared_from_this());
-            }
-            
-            void stop() const;
+            void setIndex(const ulong index); // Later figure out how to avoid this
             
         public:
             
@@ -468,6 +455,28 @@ namespace Kiwi
              @param status The perform status.
              */
             void shouldPerform(const bool status) noexcept;
+            
+            //! Prepare the node to process.
+            /** This function prepares the node to process. It allocates the signals for the inputs and the outputs.
+             */
+            void prepare();
+            
+            //! Call once the process method of the inputs and of the process class.
+            /** This function calls once the process method of the inputs and of the process class.
+             */
+            inline void tick() const
+            {
+                for(ulong i = 0; i < m_nins; i++)
+                {
+                    m_inputs[i]->perform();
+                }
+                m_process->perform(shared_from_this());
+            }
+            
+            //! Notify the process that the dsp has been stopped.
+            /** This function notifies the process that the dsp has been stopped.
+             */
+            void stop() const;
         };
         
         static bool operator<(sNode node1, sNode node2) noexcept

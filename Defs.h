@@ -58,12 +58,6 @@ namespace Kiwi
         typedef float  sample;
 #endif
         
-        class Signal;
-        typedef shared_ptr<Signal>          sSignal;
-        typedef weak_ptr<Signal>            wSignal;
-        typedef shared_ptr<const Signal>    scSignal;
-        typedef weak_ptr<const Signal>      wcSignal;
-        
         class Process;
         typedef shared_ptr<Process>         sProcess;
         typedef weak_ptr<Process>           wProcess;
