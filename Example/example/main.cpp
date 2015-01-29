@@ -24,6 +24,7 @@ int main(int argc, const char * argv[])
         sProcess pSig = make_shared<Sig>(1.1);
         sProcess pAdd = make_shared<Plus<Scalar>>(1.2);
         sProcess pvAdd = make_shared<Plus<Vector>>();
+        sProcess pvAdd2 = make_shared<Plus<Vector>>();
         sConnection cnect1 = make_shared<Connection>(pSig, 0, pAdd, 0);
         sConnection cnect2 = make_shared<Connection>(pAdd, 0, pvAdd, 0);
         sConnection cnect3 = make_shared<Connection>(pSig, 0, pvAdd, 1);

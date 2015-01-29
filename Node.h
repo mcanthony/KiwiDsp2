@@ -477,31 +477,19 @@ namespace Kiwi
             /** This function notifies the process that the dsp has been stopped.
              */
             void stop() const;
+            
+            static bool compare(sNode node1, sNode node2) noexcept
+            {
+                if(node1 && node2)
+                {
+                    return node1->getIndex() < node2->getIndex();
+                }
+                else
+                {
+                    return false;
+                }
+            }
         };
-        
-        __attribute__((unused)) static bool operator<(sNode node1, sNode node2) noexcept
-        {
-            if(node1 && node2)
-            {
-                return node1->getIndex() < node2->getIndex();
-            }
-            else
-            {
-                return false;
-            }
-        }
-        
-        __attribute__((unused)) static bool operator==(sNode node, sProcess process) noexcept
-        {
-            if(node && process)
-            {
-                return node->getProcess() == process;
-            }
-            else
-            {
-                return false;
-            }
-        }
     }
 }
 

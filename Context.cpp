@@ -51,15 +51,16 @@ namespace Kiwi
                 sNode node = Node::create(shared_from_this(), process);
                 if(node)
                 {
-                    auto it = find(m_nodes.begin(), m_nodes.end(), process);
-                    if(it == m_nodes.end())
+                    auto it = m_nodes.begin();
+                    while(it != m_nodes.end())
                     {
-                        m_nodes.push_back(node);
+                        if((*it)->getProcess() == process)
+                        {
+                             throw Error<Process>(process, Error<Process>::Duplicate);
+                        }
+                        ++it;
                     }
-                    else
-                    {
-                        throw Error<Process>(process, Error<Process>::Duplicate);
-                    }
+                    m_nodes.push_back(node);
                 }
                 else
                 {
@@ -81,13 +82,24 @@ namespace Kiwi
                 if(from && to && from != to)
                 {
                     lock_guard<mutex> guard(m_mutex);
-                    auto nodeFrom   = find(m_nodes.begin(), m_nodes.end(), from);
+                    
+                    auto nodeFrom = m_nodes.begin();
+                    while(nodeFrom != m_nodes.end() && (*nodeFrom)->getProcess() != from)
+                    {
+                        ++nodeFrom;
+                    }
+                    
+                    auto nodeTo  = m_nodes.begin();
+                    while(nodeTo != m_nodes.end() && (*nodeTo)->getProcess() != to)
+                    {
+                        ++nodeTo;
+                    }
+                    
                     if(nodeFrom == m_nodes.end())
                     {
                         throw Error<Connection>(connection, Error<Connection>::From);
                     }
-                    auto nodeTo     = find(m_nodes.begin(), m_nodes.end(), to);
-                    if(nodeTo == m_nodes.end())
+                    else if(nodeTo == m_nodes.end())
                     {
                         throw Error<Connection>(connection, Error<Connection>::To);
                     }
@@ -180,7 +192,7 @@ namespace Kiwi
                     throw e;
                 }
             }
-            sort(m_nodes.begin(), m_nodes.end());
+            sort(m_nodes.begin(), m_nodes.end(), Node::compare);
         
             for(auto it = m_nodes.begin(); it != m_nodes.end(); ++it)
             {
