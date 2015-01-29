@@ -98,12 +98,12 @@ namespace Kiwi
                 /** This function adds a node to the output.
                  @param The node to add.
                  */
-                void addNode(sNode node);
+                void addNode(sNode node) throw(bool);
                 
                 //! Prepare the output.
                 /** This function prepare the output.
                  */
-                void prepare();
+                void prepare() throw(Error<Node>&);
                 
                 //! Retrieve if the connections are empty.
                 /** This function retrieves if the connections are empty.
@@ -203,12 +203,12 @@ namespace Kiwi
                 /** This adds  a node to the input.
                  @param The node to add.
                  */
-                void addNode(sNode node);
+                void addNode(sNode node) throw(bool);
                 
                 //! Prepare the input.
                 /** This function prepare the input.
                  */
-                void prepare();
+                void prepare() throw(Error<Node>&);
                 
                 //! Retrieve if the connections are empty.
                 /** This function retrieves if the connections are empty.
@@ -318,14 +318,14 @@ namespace Kiwi
              @param node The node to add.
              @param index The index of the input.
              */
-            void addInputNode(sNode node, const ulong index);
+            void addInputNode(sNode node, const ulong index) throw(bool);
             
             //! Add a node to an output.
             /** This function adds a node to an output.
              @param node The node to add.
              @param index The index of the output.
              */
-            void addOutputNode(sNode node, const ulong index);
+            void addOutputNode(sNode node, const ulong index) throw(bool);
             
             //! Retrieve the context of the node.
             /** This function retrieves context of the node.
@@ -459,7 +459,7 @@ namespace Kiwi
             //! Prepare the node to process.
             /** This function prepares the node to process. It allocates the signals for the inputs and the outputs.
              */
-            void prepare();
+            void prepare() throw(Error<Node>&);
             
             //! Call once the process method of the inputs and of the process class.
             /** This function calls once the process method of the inputs and of the process class.
@@ -479,7 +479,7 @@ namespace Kiwi
             void stop() const;
         };
         
-        static bool operator<(sNode node1, sNode node2) noexcept
+        __attribute__((unused)) static bool operator<(sNode node1, sNode node2) noexcept
         {
             if(node1 && node2)
             {
@@ -491,7 +491,7 @@ namespace Kiwi
             }
         }
         
-        static bool operator==(sNode node, sProcess process) noexcept
+        __attribute__((unused)) static bool operator==(sNode node, sProcess process) noexcept
         {
             if(node && process)
             {

@@ -37,6 +37,7 @@ namespace Kiwi
         public:
             Sig(const sample value = 0.) noexcept;
             ~Sig();
+            string getName() const noexcept override;
             ulong getNumberOfInputs() const noexcept override;
             ulong getNumberOfOutputs() const noexcept override;
             void prepare(sNode node) const noexcept override;

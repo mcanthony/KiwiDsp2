@@ -42,19 +42,19 @@ namespace Kiwi
         {
         private:
             const wProcess  m_from;
-            const ulong     m_outlet;
+            const ulong     m_output;
             const wProcess  m_to;
-            const ulong     m_inlet;
+            const ulong     m_input;
         public:
             
             //! Constructor.
             /** You should never have to call this method.
              */
-            Connection(const sProcess from, const ulong outlet, const sProcess to, const ulong inlet) noexcept :
+            Connection(const sProcess from, const ulong output, const sProcess to, const ulong input) noexcept :
             m_from(from),
-            m_outlet(outlet),
+            m_output(output),
             m_to(to),
-            m_inlet(inlet)
+            m_input(input)
             {
                 ;
             }
@@ -70,15 +70,15 @@ namespace Kiwi
             //! The connection creator.
             /** This function create a new connection.
              @param from    The output process.
-             @param outlet  The index of the outlet.
+             @param output  The index of the output.
              @param to      The input process.
-             @param inlet   The index of the inlet.
+             @param input   The index of the input.
              */
-            static inline sConnection create(const sProcess from, const ulong outlet, const sProcess to, const ulong inlet)
+            static inline sConnection create(const sProcess from, const ulong output, const sProcess to, const ulong input)
             {
                 if(from && to)
                 {
-                    return make_shared<Connection>(from, outlet, to, inlet);
+                    return make_shared<Connection>(from, output, to, input);
                 }
                 else
                 {
@@ -104,22 +104,22 @@ namespace Kiwi
                 return m_to.lock();
             }
             
-            //! Retrieve the index of the outlet of the connection.
-            /** The function retrieves the index of the outlet of the connection.
-             @return The index of the outlet of the connection.
+            //! Retrieve the index of the output of the connection.
+            /** The function retrieves the index of the output of the connection.
+             @return The index of the output of the connection.
              */
-            inline ulong getOutletIndex() const noexcept
+            inline ulong getOutputIndex() const noexcept
             {
-                return m_outlet;
+                return m_output;
             }
             
-            //! Retrieve the index of the inlet of the connection.
-            /** The function retrieves the index of the inlet of the connection.
-             @return The index of the inlet of the connection.
+            //! Retrieve the index of the input of the connection.
+            /** The function retrieves the index of the input of the connection.
+             @return The index of the input of the connection.
              */
-            inline ulong getInletIndex() const noexcept
+            inline ulong getInputIndex() const noexcept
             {
-                return m_inlet;
+                return m_input;
             }
         };
     }

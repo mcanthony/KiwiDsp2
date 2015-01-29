@@ -21,12 +21,10 @@
  ==============================================================================
  */
 
-#ifndef __DEF_KIWI_DSP__
-#define __DEF_KIWI_DSP__
+#ifndef __DEF_KIWI_DSP_MODULES__
+#define __DEF_KIWI_DSP_MODULES__
 
-#include "Context.h"
-#include "Modules/Modules.h"
+#include "Generator.h"
+#include "Math.h"
 
 #endif
-
-

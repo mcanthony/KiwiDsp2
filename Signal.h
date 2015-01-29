@@ -24,12 +24,69 @@
 #ifndef __DEF_KIWI_DSP_SIGNAL__
 #define __DEF_KIWI_DSP_SIGNAL__
 
-#include "Defs.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <cwchar>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <cstring>
+#include <algorithm>
+#include <memory>
+#include <cmath>
+#include <vector>
+#include <map>
+#include <list>
+#include <set>
+#include <deque>
+#include <thread>
+#include <exception>
+
+#ifdef __APPLE__
+#include <Accelerate/Accelerate.h>
+#endif
+
+using namespace std;
 
 namespace Kiwi
 {
+    
+#ifndef ulong
+    typedef unsigned long ulong;
+#endif
+    
     namespace Dsp
     {
+#ifdef KIWI_DOUBLE
+            typedef double sample;
+#else
+            typedef float  sample;
+#endif
+
+        class Process;
+        typedef shared_ptr<Process>         sProcess;
+        typedef weak_ptr<Process>           wProcess;
+        typedef shared_ptr<const Process>   scProcess;
+        typedef weak_ptr<const Process>     wcProcess;
+        
+        class Connection;
+        typedef shared_ptr<Connection>      sConnection;
+        typedef weak_ptr<Connection>        wConnection;
+        typedef shared_ptr<const Connection>scConnection;
+        typedef weak_ptr<const Connection>  wcConnection;
+        
+        class Node;
+        typedef shared_ptr<Node>            sNode;
+        typedef weak_ptr<Node>              wNode;
+        typedef shared_ptr<const Node>      scNode;
+        typedef weak_ptr<const Node>        wcNode;
+        
+        class Context;
+        typedef shared_ptr<Context>         sContext;
+        typedef weak_ptr<Context>           wContext;
+        typedef shared_ptr<const Context>   scContext;
+        typedef weak_ptr<const Context>     wcContext;
+        
         // ================================================================================ //
         //                                      SIGNAL                                      //
         // ================================================================================ //

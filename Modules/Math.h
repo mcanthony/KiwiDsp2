@@ -30,7 +30,55 @@ namespace Kiwi
 {
     namespace Dsp
     {
-        
+        enum Mode : bool
+        {
+            Scalar = 0,
+            Vector = 1
+        };
+            
+        // ================================================================================ //
+        //                                      PLUS                                        //
+        // ================================================================================ //
+            
+        template <Mode mode>class Plus;
+            
+            // ================================================================================ //
+            //                                      SCALAR                                      //
+            // ================================================================================ //
+            
+            template <>class Plus<Scalar> : public Process
+            {
+            private:
+                sample m_value;
+            public:
+                Plus(const sample value = 0.) noexcept;
+                ~Plus();
+                string getName() const noexcept override;
+                ulong getNumberOfInputs() const noexcept override;
+                ulong getNumberOfOutputs() const noexcept override;
+                void prepare(sNode node) const noexcept override;
+                void perform(scNode node) const noexcept override;
+                void release(scNode node) const noexcept override;
+                void setValue(const sample value) noexcept;
+                sample getValue() const noexcept;
+            };
+            
+            // ================================================================================ //
+            //                                      VECTOR                                      //
+            // ================================================================================ //
+            
+            template <>class Plus<Vector> : public Process
+            {
+            public:
+                Plus() noexcept;
+                ~Plus();
+                string getName() const noexcept override;
+                ulong getNumberOfInputs() const noexcept override;
+                ulong getNumberOfOutputs() const noexcept override;
+                void prepare(sNode node) const noexcept override;
+                void perform(scNode node) const noexcept override;
+                void release(scNode node) const noexcept override;
+            };
     }
 }
 

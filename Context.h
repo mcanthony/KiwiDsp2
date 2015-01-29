@@ -26,6 +26,12 @@
 
 #include "Node.h"
 
+// TODO :
+// - Think about exception
+// - Check thread safety
+// - Set io vectors to the context
+// - Math and FAUST compatibility for nodes (string)
+// - Allows to create node without context ?
 namespace Kiwi
 {
     namespace Dsp
@@ -46,7 +52,7 @@ namespace Kiwi
             vector<sNode>     m_nodes;
             mutable mutex     m_mutex;
             
-            void sortNodes(set<sNode>& nodes, ulong& index, sNode node);
+            void sortNodes(set<sNode>& nodes, ulong& index, sNode node) throw(Error<Node>&);
         public:
             
             //! The constructor.
@@ -101,18 +107,18 @@ namespace Kiwi
             /** The function adds a process to the dsp context.
              @param process The process to add.
              */
-            void add(sProcess process);
+            void add(sProcess process) throw(Error<Process>&);
             
             //! Add a connection to the dsp context.
             /** The function adds a connection to the dsp context.
              @param connection The connection to add.
              */
-            void add(sConnection connection);
+            void add(sConnection connection) throw(Error<Connection>&);
             
             //! Compile the dsp context.
             /** The function sorts the dsp nodes and call the dsp methods of the processes.
              */
-            void compile();
+            void compile() throw(Error<Node>&);
             
             //! Perform a tick on the dsp context.
             /** The function calls once all the process methods of the dsp nodes.

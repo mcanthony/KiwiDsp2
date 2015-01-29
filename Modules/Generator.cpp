@@ -38,6 +38,11 @@ namespace Kiwi
             ;
         }
         
+        string Sig::getName() const noexcept
+        {
+            return "Sig";
+        }
+        
         ulong Sig::getNumberOfInputs() const noexcept
         {
             return 0;
@@ -56,6 +61,12 @@ namespace Kiwi
         void Sig::perform(scNode node) const noexcept
         {
             Signal::vfill(node->getVectorSize(), m_value, node->getOutputsSamples()[0]);
+            cout << "Sig samples out : " << node->getOutputsSamples() << endl;
+            for(ulong i = 0; i < node->getVectorSize(); i++)
+            {
+                cout << node->getOutputsSamples()[0][i] << " ";
+            }
+            cout << endl;
         }
         
         void Sig::release(scNode node) const noexcept

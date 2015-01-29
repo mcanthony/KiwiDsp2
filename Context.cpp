@@ -43,40 +43,99 @@ namespace Kiwi
             m_nodes.clear();
         }
         
-        void Context::add(sProcess process)
+        void Context::add(sProcess process) throw(Error<Process>&)
         {
             if(process)
             {
                 lock_guard<mutex> guard(m_mutex);
-                auto it = find(m_nodes.begin(), m_nodes.end(), process);
-                if(it != m_nodes.end())
+                sNode node = Node::create(shared_from_this(), process);
+                if(node)
                 {
-                    m_nodes.push_back(Node::create(shared_from_this(), process));
+                    auto it = find(m_nodes.begin(), m_nodes.end(), process);
+                    if(it == m_nodes.end())
+                    {
+                        m_nodes.push_back(node);
+                    }
+                    else
+                    {
+                        throw Error<Process>(process, Error<Process>::Duplicate);
+                    }
                 }
+                else
+                {
+                    throw Error<Process>(process, Error<Process>::Node);
+                }
+            }
+            else
+            {
+                throw Error<Process>(process, Error<Process>::Valid);
             }
         }
         
-        void Context::add(sConnection connection)
+        void Context::add(sConnection connection) throw(Error<Connection>&)
         {
             if(connection)
             {
                 sProcess from   = connection->getProcessFrom();
                 sProcess to     = connection->getProcessTo();
-                if(from && to)
+                if(from && to && from != to)
                 {
                     lock_guard<mutex> guard(m_mutex);
                     auto nodeFrom   = find(m_nodes.begin(), m_nodes.end(), from);
-                    auto nodeTo     = find(m_nodes.begin(), m_nodes.end(), to);
-                    if(nodeFrom != m_nodes.end() && nodeTo != m_nodes.end() && nodeFrom != nodeTo)
+                    if(nodeFrom == m_nodes.end())
                     {
-                        (*nodeFrom)->addOutputNode((*nodeTo), connection->getOutletIndex());
-                        (*nodeTo)->addInputNode((*nodeFrom), connection->getInletIndex());
+                        throw Error<Connection>(connection, Error<Connection>::From);
+                    }
+                    auto nodeTo     = find(m_nodes.begin(), m_nodes.end(), to);
+                    if(nodeTo == m_nodes.end())
+                    {
+                        throw Error<Connection>(connection, Error<Connection>::To);
+                    }
+                    
+                    try
+                    {
+                        (*nodeFrom)->addOutputNode((*nodeTo), connection->getOutputIndex());
+                    }
+                    catch(bool e)
+                    {
+                        if(e)
+                        {
+                            throw Error<Connection>(connection, Error<Connection>::Input);
+                        }
+                        else
+                        {
+                            throw Error<Connection>(connection, Error<Connection>::Duplicate);
+                        }
+                    }
+                    
+                    try
+                    {
+                        (*nodeTo)->addInputNode((*nodeFrom), connection->getInputIndex());
+                    }
+                    catch(bool e)
+                    {
+                        if(e)
+                        {
+                            throw Error<Connection>(connection, Error<Connection>::Output);
+                        }
+                        else
+                        {
+                            throw Error<Connection>(connection, Error<Connection>::Duplicate);
+                        }
                     }
                 }
+                else
+                {
+                    throw Error<Connection>(connection, Error<Connection>::Valid);
+                }
+            }
+            else
+            {
+                throw Error<Connection>(connection, Error<Connection>::Valid);
             }
         }
         
-        void Context::sortNodes(set<sNode>& nodes, ulong& index, sNode node)
+        void Context::sortNodes(set<sNode>& nodes, ulong& index, sNode node) throw(Error<Node>&)
         {
             if(!node->getIndex())
             {
@@ -90,7 +149,7 @@ namespace Kiwi
                         {
                             if(nodes.find(pnode) != nodes.end())
                             {
-                                throw pnode;
+                                throw Error<Node>(pnode, node, Error<Node>::Loop);
                             }
                             else
                             {
@@ -104,39 +163,40 @@ namespace Kiwi
             }
         }
         
-        void Context::compile()
+        void Context::compile() throw(Error<Node>&)
         {
             lock_guard<mutex> guard(m_mutex);
             set<sNode> nodes;
             ulong index = 0;
             
-            try
+            for(auto it = m_nodes.begin(); it != m_nodes.end(); ++it)
             {
-                for(auto it = m_nodes.begin(); it != m_nodes.end(); ++it)
+                try
                 {
                     sortNodes(nodes, index, (*it));
                 }
-                sort(m_nodes.begin(), m_nodes.end());
-            }
-            catch(sNode node)
-            {
-                throw node->getProcess();
-            }
-            
-            try
-            {
-                for(auto it = m_nodes.begin(); it != m_nodes.end(); ++it)
+                catch(Error<Node>& e)
                 {
-                    (*it)->prepare();
-                    if(!(*it)->shouldPerform())
-                    {
-                        it = m_nodes.erase(it);
-                    }
+                    throw e;
                 }
             }
-            catch(sNode node)
+            sort(m_nodes.begin(), m_nodes.end());
+        
+            for(auto it = m_nodes.begin(); it != m_nodes.end(); ++it)
             {
-                throw node->getProcess();
+                try
+                {
+                    (*it)->prepare();
+                }
+                catch(Error<Node>& e)
+                {
+                    throw e;
+                }
+                
+                if(!(*it)->shouldPerform())
+                {
+                    it = m_nodes.erase(it);
+                }
             }
             
             nodes.clear();

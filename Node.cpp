@@ -51,12 +51,15 @@ namespace Kiwi
             m_connections.clear();
         }
         
-        void Node::Output::addNode(sNode node)
+        void Node::Output::addNode(sNode node) throw(bool)
         {
-            m_connections.insert(node);
+            if(!m_connections.insert(node).second)
+            {
+                throw false;
+            }
         }
         
-        void Node::Output::prepare()
+        void Node::Output::prepare() throw(Error<Node>&)
         {
             if(m_owner && m_vector)
             {
@@ -68,15 +71,26 @@ namespace Kiwi
             sNode node = m_node.lock();
             if(node)
             {
-                sample* vec = nullptr;
-                if(node->isInplace() && node->getNumberOfInputs() < m_index)
+                if(node->isInplace() && node->getNumberOfInputs() > m_index)
                 {
-                    vec = node->m_inputs[m_index]->getVector();
+                    m_vector = node->m_inputs[m_index]->getVector();
+                    if(!m_vector)
+                    {
+                        throw Error<Node>(node, node, Error<Node>::Inplace);
+                    }
                 }
-                if(!vec)
+                if(!m_vector)
                 {
                     m_owner     = true;
-                    m_vector    = new sample[node->getVectorSize()];
+                    try
+                    {
+                        m_vector    = new sample[node->getVectorSize()];
+                    }
+                    catch(bad_alloc& e)
+                    {
+                        throw Error<Node>(node, node, Error<Node>::Alloc);
+                    }
+                    
                 }
             }
         }
@@ -111,12 +125,15 @@ namespace Kiwi
             m_connections.clear();
         }
         
-        void Node::Input::addNode(sNode node)
+        void Node::Input::addNode(sNode node) throw(bool)
         {
-            m_connections.insert(node);
+            if(!m_connections.insert(node).second)
+            {
+                throw false;
+            }
         }
         
-        void Node::Input::prepare()
+        void Node::Input::prepare() throw(Error<Node>&)
         {
             if(m_vector)
             {
@@ -147,28 +164,51 @@ namespace Kiwi
                 }
                 m_nothers = m_connections.size();
                 m_others  = new sample*[m_nothers];
-                ulong i = 0;
-                for(auto it = m_connections.begin(); it != m_connections.end(); )
+                ulong inc = 0;
+                for(auto it = m_connections.begin(); it != m_connections.end(); ++it)
                 {
                     sNode in = (*it).lock();
                     if(in)
                     {
-                        sOutput output = nullptr;
-                        for(vector<NodeSet>::size_type i = 0; i < in->m_outputs.size(); i++)
+                        if(in->getSampleRate() != node->getSampleRate())
                         {
-                            if(in->m_outputs[i]->hasNode(node))
-                            {
-                                output = in->m_outputs[i];
-                                break;
-                            }
+                            throw Error<Node>(node, in, Error<Node>::SampleRate);
                         }
-                        if(output)
+                        else if(in->getVectorSize() != node->getVectorSize())
                         {
-                            m_others[i++] = output->getVector();
+                            throw Error<Node>(node, in, Error<Node>::VectorSize);
+                        }
+                        else
+                        {
+                            sOutput output = nullptr;
+                            for(vector<NodeSet>::size_type i = 0; i < in->m_outputs.size(); i++)
+                            {
+                                if(in->m_outputs[i]->hasNode(node))
+                                {
+                                    output = in->m_outputs[i];
+                                    break;
+                                }
+                            }
+                            if(output)
+                            {
+                                m_others[inc++] = output->getVector();
+                            }
+                            else
+                            {
+                                throw Error<Node>(node, in, Error<Node>::Recopy);
+                            }
                         }
                     }
                 }
-                m_vector    = new sample[node->getVectorSize()];
+                try
+                {
+                    m_vector    = new sample[node->getVectorSize()];
+                }
+                catch(bad_alloc& e)
+                {
+                    throw Error<Node>(node, node, Error<Node>::Alloc);
+                }
+                
             }
             
         }
@@ -186,7 +226,6 @@ namespace Kiwi
         m_sample_ins(new sample*[m_nins]),
         m_nouts(process->getNumberOfOutputs()),
         m_sample_outs(new sample*[m_nouts]),
-        
         m_inplace(true),
         m_shouldperform(false),
         m_index(0)
@@ -207,19 +246,41 @@ namespace Kiwi
             m_index = index;
         }
         
-        void Node::addInputNode(sNode node, const ulong index)
+        void Node::addInputNode(sNode node, const ulong index) throw(bool)
         {
             if(index < (ulong)m_inputs.size())
             {
-                m_inputs[index]->addNode(node);
+                try
+                {
+                    m_inputs[index]->addNode(node);
+                }
+                catch(bool)
+                {
+                    throw false;
+                }
+            }
+            else
+            {
+                throw true;
             }
         }
         
-        void Node::addOutputNode(sNode node, const ulong index)
+        void Node::addOutputNode(sNode node, const ulong index) throw(bool)
         {
             if(index < (ulong)m_outputs.size())
             {
-                m_outputs[index]->addNode(node);
+                try
+                {
+                    m_outputs[index]->addNode(node);
+                }
+                catch(bool)
+                {
+                    throw false;
+                }
+            }
+            else
+            {
+                throw true;
             }
         }
         
@@ -233,7 +294,7 @@ namespace Kiwi
             m_shouldperform = status;
         }
         
-        void Node::prepare()
+        void Node::prepare() throw(Error<Node>&)
         {
             m_shouldperform = true;
             m_process->prepare(shared_from_this());
@@ -242,12 +303,27 @@ namespace Kiwi
             {
                 for(ulong i = 0; i < m_nins; i++)
                 {
-                    m_inputs[i]->prepare();
-                    m_sample_outs[i] = m_outputs[i]->getVector();
+                    try
+                    {
+                        m_inputs[i]->prepare();
+                    }
+                    catch(Error<Node>& e)
+                    {
+                        throw e;
+                    }
+                    m_sample_ins[i] = m_inputs[i]->getVector();
                 }
                 for(ulong i = 0; i < m_nouts; i++)
                 {
-                    m_outputs[i]->prepare();
+                    try
+                    {
+                        m_outputs[i]->prepare();
+                    }
+                    catch(Error<Node>& e)
+                    {
+                        throw e;
+                    }
+                    
                     m_sample_outs[i] = m_outputs[i]->getVector();
                 }
             }

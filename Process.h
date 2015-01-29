@@ -24,7 +24,7 @@
 #ifndef __DEF_KIWI_DSP_PROCESS__
 #define __DEF_KIWI_DSP_PROCESS__
 
-#include "Signal.h"
+#include "Error.h"
 
 namespace Kiwi
 {
@@ -57,6 +57,12 @@ namespace Kiwi
             {
                 ;
             }
+            
+            //! Retrieve the name of the process.
+            /** The method retrieves the name of the process.
+             @return The name of the process.
+             */
+            virtual string getName() const noexcept = 0;
             
             //! Retrieve the number of inputs of the process.
             /** The method retrieves the number of inputs of the process.
