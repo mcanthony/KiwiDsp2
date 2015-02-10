@@ -100,10 +100,10 @@
 			isa = PBXGroup;
 			children = (
 				8F580B5D1A78FECB002A790B /* Dsp.h */,
-				8F580B6A1A78FECB002A790B /* Signal.cpp */,
-				8F580B6B1A78FECB002A790B /* Signal.h */,
 				8F580B761A790E91002A790B /* Error.cpp */,
 				8F580B771A790E91002A790B /* Error.h */,
+				8F580B6A1A78FECB002A790B /* Signal.cpp */,
+				8F580B6B1A78FECB002A790B /* Signal.h */,
 				8F580B681A78FECB002A790B /* Process.cpp */,
 				8F580B691A78FECB002A790B /* Process.h */,
 				8F580B591A78FECB002A790B /* Connection.cpp */,
@@ -311,6 +311,7 @@
 				8F580B571A78FEB0002A790B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
