@@ -24,62 +24,41 @@
 #ifndef __DEF_KIWI_DSP_MATH__
 #define __DEF_KIWI_DSP_MATH__
 
-#include "../Context.h"
+#include "../DspContext.h"
 
 namespace Kiwi
 {
-    namespace Dsp
+    // ================================================================================ //
+    //                                      PLUS                                        //
+    // ================================================================================ //
+    
+    template <DspMode mode> class DspPlus;
+    
+    template <>class DspPlus<Scalar> : public DspNode
     {
-        enum Mode : bool
-        {
-            Scalar = 0,
-            Vector = 1
-        };
-            
-        // ================================================================================ //
-        //                                      PLUS                                        //
-        // ================================================================================ //
-            
-        template <Mode mode>class Plus;
-            
-            // ================================================================================ //
-            //                                      SCALAR                                      //
-            // ================================================================================ //
-            
-            template <>class Plus<Scalar> : public Process
-            {
-            private:
-                sample m_value;
-            public:
-                Plus(const sample value = 0.) noexcept;
-                ~Plus();
-                string getName() const noexcept override;
-                ulong getNumberOfInputs() const noexcept override;
-                ulong getNumberOfOutputs() const noexcept override;
-                void prepare(sNode node) const noexcept override;
-                void perform(scNode node) const noexcept override;
-                void release(scNode node) const noexcept override;
-                void setValue(const sample value) noexcept;
-                sample getValue() const noexcept;
-            };
-            
-            // ================================================================================ //
-            //                                      VECTOR                                      //
-            // ================================================================================ //
-            
-            template <>class Plus<Vector> : public Process
-            {
-            public:
-                Plus() noexcept;
-                ~Plus();
-                string getName() const noexcept override;
-                ulong getNumberOfInputs() const noexcept override;
-                ulong getNumberOfOutputs() const noexcept override;
-                void prepare(sNode node) const noexcept override;
-                void perform(scNode node) const noexcept override;
-                void release(scNode node) const noexcept override;
-            };
-    }
+    private:
+        sample m_value;
+    public:
+        DspPlus(const sample value = 0.) noexcept;
+        ~DspPlus();
+        string getName() const noexcept override;
+        void prepare() noexcept override;
+        void perform() const noexcept override;
+        void release() noexcept override;
+        void setValue(const sample value) noexcept;
+        sample getValue() const noexcept;
+    };
+    
+    template <>class DspPlus<Vector> : public DspNode
+    {
+    public:
+        DspPlus() noexcept;
+        ~DspPlus();
+        string getName() const noexcept override;
+        void prepare() noexcept override;
+        void perform() const noexcept override;
+        void release() noexcept override;
+    };
 }
 
 #endif

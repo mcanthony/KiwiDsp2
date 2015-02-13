@@ -24,14 +24,11 @@
 #ifndef __DEF_KIWI_DSP_FILTER__
 #define __DEF_KIWI_DSP_FILTER__
 
-#include "../Context.h"
+#include "../DspContext.h"
 
 namespace Kiwi
 {
-    namespace Dsp
-    {
-        ;
-    }
+    
 }
 
 #endif

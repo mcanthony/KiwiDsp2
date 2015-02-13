@@ -25,64 +25,135 @@
 
 namespace Kiwi
 {
-    namespace Dsp
+    // ================================================================================ //
+    //                                      SIG                                         //
+    // ================================================================================ //
+    
+    DspSig::DspSig(const sample value) noexcept : DspNode(0, 1), m_value(value)
     {
-        Sig::Sig(const sample value) noexcept :
-        m_value(value)
+        ;
+    }
+    
+    DspSig::~DspSig()
+    {
+        ;
+    }
+    
+    string DspSig::getName() const noexcept
+    {
+        return "DspSig";
+    }
+    
+    void DspSig::prepare() noexcept
+    {
+        shouldPerform(isOutputConnected(0));
+    }
+    
+    void DspSig::perform() const noexcept
+    {
+        Signal::vfill(getVectorSize(), m_value, getOutputsSamples()[0]);
+        Signal::vpost(5, getOutputsSamples()[0]);
+    }
+    
+    void DspSig::release() noexcept
+    {
+        ;
+    }
+    
+    void DspSig::setValue(const sample value) noexcept
+    {
+        m_value = value;
+    }
+    
+    sample DspSig::getValue() const noexcept
+    {
+        return m_value;
+    }
+    
+    // ================================================================================ //
+    //                                      PHASOR                                      //
+    // ================================================================================ //
+    
+    /*
+    Phasor<Scalar>::Phasor() noexcept : DspNode(0, 1), m_step(0.), m_phase(0.)
+    {
+        ;
+    }
+    
+    Phasor<Scalar>::~Phasor()
+    {
+        ;
+    }
+    
+    string Phasor<Scalar>::getName() const noexcept
+    {
+        return "Phasor (scalar)";
+    }
+    
+    void Phasor<Scalar>::prepare() noexcept
+    {
+        shouldPerform(isOutputConnected(0));
+        m_step = 1. / (sample)getSampleRate();
+    }
+    
+    void Phasor<Scalar>::perform() const noexcept
+    {
+        m_phase = Signal::vphasor(getVectorSize(), m_step, m_phase, getOutputsSamples()[0]);
+        sample* input0 = getInputsSamples()[0];
+        sample* output0 = getOutputsSamples()[0];
+        for(int i = 0; i < getVectorSize(); i++)
         {
-            ;
+            sample temp = (m_phase + (m_step * (float)input0[i]));
+            output0[i] = (temp - floorf(temp));
         }
+    }
+    
+    void Phasor<Scalar>::release() noexcept
+    {
         
-        Sig::~Sig()
-        {
-            ;
-        }
+    }*/
+    
+    // ================================================================================ //
+    //                                      NOISE                                       //
+    // ================================================================================ //
+    
+    int DspNoise::c_seed = 0;
+    
+    DspNoise::DspNoise(const int seed) noexcept : DspNode(0, 1), m_seed(seed)
+    {
+        ;
+    }
+    
+    DspNoise::~DspNoise()
+    {
+        ;
+    }
+    
+    string DspNoise::getName() const noexcept
+    {
+        return "DspNoise";
+    }
+    
+    void DspNoise::prepare() noexcept
+    {
+        shouldPerform(isOutputConnected(0));
+    }
+    
+    void DspNoise::perform() const noexcept
+    {
+        m_seed = Signal::vnoise(getVectorSize(), m_seed, getOutputsSamples()[0]);
+        Signal::vpost(5, getOutputsSamples()[0]);
+    }
+    
+    void DspNoise::release() noexcept
+    {
         
-        string Sig::getName() const noexcept
-        {
-            return "Sig";
-        }
-        
-        ulong Sig::getNumberOfInputs() const noexcept
-        {
-            return 0;
-        }
-        
-        ulong Sig::getNumberOfOutputs() const noexcept
-        {
-            return 1;
-        }
-        
-        void Sig::prepare(sNode node) const noexcept
-        {
-            ;
-        }
-        
-        void Sig::perform(scNode node) const noexcept
-        {
-            Signal::vfill(node->getVectorSize(), m_value, node->getOutputsSamples()[0]);
-            cout << "Sig samples out : " << node->getOutputsSamples() << endl;
-            for(ulong i = 0; i < node->getVectorSize(); i++)
-            {
-                cout << node->getOutputsSamples()[0][i] << " ";
-            }
-            cout << endl;
-        }
-        
-        void Sig::release(scNode node) const noexcept
-        {
-            ;
-        }
-        
-        void Sig::setValue(const sample value) noexcept
-        {
-            m_value = value;
-        }
-        
-        sample Sig::getValue() const noexcept
-        {
-            return m_value;
-        }        
+    }
+    
+    int DspNoise::nextSeed() noexcept
+    {
+        c_seed = (12345 + (1103515245 * c_seed));
+        return c_seed;
     }
 }
 

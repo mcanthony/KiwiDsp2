@@ -10,25 +10,23 @@
 
 #include "../../Dsp.h"
 
-using namespace Kiwi::Dsp;
+using namespace Kiwi;
 
 int main(int argc, const char * argv[])
 {
-    sContext ctxt = Context::create(44100, 8);
+    sDspContext ctxt = make_shared<DspContext>();
     if(ctxt)
     {
-        cout << "Context" << endl << "{" << endl;
-        cout << "   Samplerate : " << ctxt->getSampleRate() << endl;
-        cout << "   Vector : " << ctxt->getVectorSize() << endl;
-        
-        sProcess pSig = make_shared<Sig>(1.1);
-        sProcess pAdd = make_shared<Plus<Scalar>>(1.2);
-        sProcess pvAdd = make_shared<Plus<Vector>>();
-        sProcess pvAdd2 = make_shared<Plus<Vector>>();
-        sConnection cnect1 = make_shared<Connection>(pSig, 0, pAdd, 0);
-        sConnection cnect2 = make_shared<Connection>(pAdd, 0, pvAdd, 0);
-        sConnection cnect3 = make_shared<Connection>(pSig, 0, pvAdd, 1);
-        sConnection cnect4 = make_shared<Connection>(pvAdd, 0, pAdd, 0);
+        sDspNode pSig = make_shared<DspSig>(1.1);
+        sDspNode pAdd = make_shared<DspPlus<Scalar>>(1.2);
+        sDspNode pvAdd = make_shared<DspPlus<Vector>>();
+        sDspNode pvAdd2 = make_shared<DspPlus<Vector>>();
+        sDspNode pNoise = make_shared<DspNoise>();
+        sDspLink cnect1 = make_shared<DspLink>(pSig, 0, pAdd, 0);
+        sDspLink cnect2 = make_shared<DspLink>(pAdd, 0, pvAdd, 0);
+        sDspLink cnect3 = make_shared<DspLink>(pSig, 0, pvAdd, 1);
+        sDspLink cnect4 = make_shared<DspLink>(pvAdd, 0, pvAdd2, 0);
+        sDspLink cnect5 = make_shared<DspLink>(pNoise, 0, pvAdd2, 0);
         
         if(pSig && pAdd && pvAdd && cnect1 && cnect2 && cnect3)
         {
@@ -37,49 +35,49 @@ int main(int argc, const char * argv[])
                 ctxt->add(pSig);
                 ctxt->add(pAdd);
                 ctxt->add(pvAdd);
+                ctxt->add(pvAdd2);
+                ctxt->add(pNoise);
             }
             catch(exception& e)
             {
-                cout << "Error with compilation : " << e.what() << endl;
-                cout << "}" << endl;
+                cout << "DspError with compilation : " << e.what() << endl;
                 return 1;
             }
             
             try
             {
-                //ctxt->add(cnect4);
+                ctxt->add(cnect4);
                 ctxt->add(cnect1);
                 ctxt->add(cnect2);
                 ctxt->add(cnect3);
+                ctxt->add(cnect5);
             }
             catch(exception& e)
             {
-                cout << "Error with compilation : " << e.what() << endl;
-                cout << "}" << endl;
+                cout << "DspError with compilation : " << e.what() << endl;
                 return 1;
             }
             
             try
             {
-                ctxt->compile();
+                ctxt->compile(44100, 64);
             }
             catch(exception& e)
             {
-                cout << "Error with compilation : " << e.what() << endl;
-                cout << "}" << endl;
+                cout << "DspError with compilation : " << e.what() << endl;
                 return 1;
             }
             
             // Tester les threads !
             
-            cout << "   Number of nodes : " << ctxt->getNumberOfNodes() << endl;
+            cout << "Number of nodes : " << ctxt->getNumberOfDspNodes() << endl;
+            cout << "Tick" << endl;
             ctxt->tick();
-            shared_ptr<Plus<Scalar>> addd = dynamic_pointer_cast<Plus<Scalar>>(pAdd);
+            shared_ptr<DspPlus<Scalar>> addd = dynamic_pointer_cast<DspPlus<Scalar>>(pAdd);
             addd->setValue(1.3);
+            cout << "Tick" << endl;
             ctxt->tick();
         }
-        
-        cout << "}" << endl;
     }
     
     return 0;

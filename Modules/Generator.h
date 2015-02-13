@@ -24,29 +24,81 @@
 #ifndef __DEF_KIWI_DSP_GENERATOR__
 #define __DEF_KIWI_DSP_GENERATOR__
 
-#include "../Context.h"
+#include "../DspContext.h"
 
 namespace Kiwi
 {
-    namespace Dsp
+    // ================================================================================ //
+    //                                      SIG                                         //
+    // ================================================================================ //
+    
+    class DspSig : public DspNode
     {
-        class Sig : public Process
-        {
-        private:
-            sample m_value;
-        public:
-            Sig(const sample value = 0.) noexcept;
-            ~Sig();
-            string getName() const noexcept override;
-            ulong getNumberOfInputs() const noexcept override;
-            ulong getNumberOfOutputs() const noexcept override;
-            void prepare(sNode node) const noexcept override;
-            void perform(scNode node) const noexcept override;
-            void release(scNode node) const noexcept override;
-            void setValue(const sample value) noexcept;
-            sample getValue() const noexcept;
-        };
-    }
+    private:
+        sample m_value;
+    public:
+        DspSig(const sample value = 0.) noexcept;
+        ~DspSig();
+        string getName() const noexcept override;
+        void prepare() noexcept override;
+        void perform() const noexcept override;
+        void release() noexcept override;
+        void setValue(const sample value) noexcept;
+        sample getValue() const noexcept;
+    };
+    
+    // ================================================================================ //
+    //                                      PHASOR                                      //
+    // ================================================================================ //
+    /*
+    template <DspMode mode> class Phasor;
+    
+    template <> class Phasor<Scalar> : public DspNode
+    {
+    private:
+        sample m_step;
+        mutable sample m_phase;
+    public:
+        Phasor() noexcept;
+        ~Phasor();
+        string getName() const noexcept override;
+        void prepare() noexcept override;
+        void perform() const noexcept override;
+        void release() noexcept override;
+    };
+    
+    template <> class Phasor<Vector> : public DspNode
+    {
+    private:
+        sample m_step;
+        mutable sample m_phase;
+    public:
+        Phasor() noexcept;
+        ~Phasor();
+        string getName() const noexcept override;
+        void prepare() noexcept override;
+        void perform() const noexcept override;
+        void release() noexcept override;
+    };*/
+    
+    // ================================================================================ //
+    //                                      NOISE                                       //
+    // ================================================================================ //
+    
+    class DspNoise : public DspNode
+    {
+    private:
+        static  int c_seed;
+        mutable int m_seed;
+    public:
+        DspNoise(const int seed = 0.) noexcept;
+        ~DspNoise();
+        string getName() const noexcept override;
+        void prepare() noexcept override;
+        void perform() const noexcept override;
+        void release() noexcept override;
+        static int nextSeed() noexcept;
+    };
 }
 
 #endif
