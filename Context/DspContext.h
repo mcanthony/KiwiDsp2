@@ -27,11 +27,10 @@
 #include "DspNode.h"
 
 // TODO :
-// - Think about exception
 // - Check thread safety
 // - Set io vectors to the context
 // - Math and FAUST compatibility for nodes (string)
-// - Allows to create node without context ?
+// - Clean The errors
 namespace Kiwi
 {
     // ================================================================================ //
@@ -45,7 +44,7 @@ namespace Kiwi
     class DspContext: public enable_shared_from_this<DspContext>
     {
     private:
-        vector<sDspNode>   m_nodes;
+        vector<sDspNode>m_nodes;
         mutable mutex   m_mutex;
         ulong           m_samplerate;
         ulong           m_vectorsize;
@@ -55,12 +54,12 @@ namespace Kiwi
     public:
         
         //! The constructor.
-        /** You should never use this method except if you really know what you're doing.
+        /** The function initialize and empty context.
          */
         DspContext() noexcept;
         
         //! The destructor.
-        /** You should never use this method except if you really know what you're doing.
+        /** Stop the digital signal processing if needed and free the nodes.
          */
         ~DspContext();
         

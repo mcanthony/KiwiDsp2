@@ -32,9 +32,9 @@ namespace Kiwi
     //                                      SIGNAL                                      //
     // ================================================================================ //
     
-    //! The signal class offers static method to perform optimized operation with vectors of samples.
+    //! The signal class offers static method to perform optimized operations with vectors of samples.
     /**
-     The signal class offers static method to perform optimized operation with vectors of samples. All the methods offer are prototyped for single or double precision. It use the apple vDSP functions, the blas or atlas libraries or native c.
+     The signal class offers static method to perform optimized operations with vectors of samples. All the methods are prototyped for single or double precision. It use the apple vDSP functions, the blas or atlas libraries or native c.
      */
     class Signal
     {

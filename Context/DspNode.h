@@ -24,7 +24,7 @@
 #ifndef __DEF_KIWI_DSP_NODE__
 #define __DEF_KIWI_DSP_NODE__
 
-#include "Signal.h"
+#include "DspSignal.h"
 
 namespace Kiwi
 {
@@ -32,9 +32,9 @@ namespace Kiwi
     //                                      DSP NODE                                    //
     // ================================================================================ //
     
-    //! The dsp nodes manages the digital signal processing of a process.
+    //! The dsp nodes performs the digital signal processing.
     /**
-     The dsp node manages the dsp of a process and should be configure during the call of the prepare method of the process.
+     The dsp node is a virtual class that performs the digital signal processing and manages input and output connections.
      */
     class DspNode: public enable_shared_from_this<DspNode>
     {
@@ -62,12 +62,14 @@ namespace Kiwi
     public:
         
         //! The constructor.
-        /** You should never use this method except if you really know what you're doing.
+        /** Create the input and output vectors and allocate the input and output sample matrices.
+         @param nins    The number of inputs.
+         @param nouts   The number of outputs.
          */
         DspNode(const ulong nins, const ulong nouts) noexcept;
         
         //! The destructor.
-        /** You should never use this method except if you really know what you're doing.
+        /** Free the input and ouputs vectors and matrices.
          */
         virtual ~DspNode();
         
@@ -246,7 +248,7 @@ namespace Kiwi
         const ulong   m_index;
         sample*       m_vector;
         bool          m_owner;
-        DspNodeSet       m_links;
+        DspNodeSet    m_links;
         
     public:
         //! Constructor.
@@ -334,7 +336,7 @@ namespace Kiwi
         sample*       m_vector;
         ulong         m_nothers;
         sample**      m_others;
-        DspNodeSet       m_links;
+        DspNodeSet    m_links;
     public:
         
         //! Constructor.
@@ -402,7 +404,7 @@ namespace Kiwi
     };
     
     // ================================================================================ //
-    //                                      DSP CONNECTION                              //
+    //                                      DSP LINK                                    //
     // ================================================================================ //
     
     //! The dsp link owns the basic informations of a link between two node.
@@ -412,9 +414,9 @@ namespace Kiwi
     class DspLink
     {
     private:
-        const wDspNode     m_from;
+        const wDspNode  m_from;
         const ulong     m_output;
-        const wDspNode     m_to;
+        const wDspNode  m_to;
         const ulong     m_input;
     public:
         

@@ -39,6 +39,10 @@ namespace Kiwi
     
     DspContext::~DspContext()
     {
+        if(m_compiled)
+        {
+            stop();
+        }
         m_nodes.clear();
     }
     

@@ -24,11 +24,7 @@
 #ifndef __DEF_KIWI_DSP__
 #define __DEF_KIWI_DSP__
 
-#include "DspError.h"
-#include "Signal.h"
-#include "DspNode.h"
-#include "DspContext.h"
-#include "Modules/Modules.h"
+#include "Modules/DspModules.h"
 
 #endif
 

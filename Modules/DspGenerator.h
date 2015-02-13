@@ -24,7 +24,7 @@
 #ifndef __DEF_KIWI_DSP_GENERATOR__
 #define __DEF_KIWI_DSP_GENERATOR__
 
-#include "../DspContext.h"
+#include "../Context/DspContext.h"
 
 namespace Kiwi
 {
