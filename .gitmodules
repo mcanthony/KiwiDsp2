@@ -1,0 +1,3 @@
+[submodule "ThirdParty/PortAudio"]
+	path = ThirdParty/PortAudio
+	url = https://pierreguillot@github.com/KiwiMusic/PortAudio.git
