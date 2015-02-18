@@ -24,7 +24,7 @@
 #ifndef __DEF_KIWI_DSP_NODE__
 #define __DEF_KIWI_DSP_NODE__
 
-#include "DspSignal.h"
+#include "DspIoput.h"
 
 namespace Kiwi
 {
@@ -38,54 +38,130 @@ namespace Kiwi
      */
     class DspNode: public enable_shared_from_this<DspNode>
     {
+        friend DspChain;
+        friend DspOutput;
+        friend DspInput;
+        friend DspLink;
     private:
-        friend DspContext;
-        class Output;
-        class Input;
-        typedef shared_ptr<Output>  sOutput;
-        typedef shared_ptr<Input>   sInput;
-        typedef set<weak_ptr<DspNode>, owner_less< weak_ptr<DspNode>>> DspNodeSet;
         
+        const wDspChain m_chain;
         const ulong     m_nins;
         sample** const  m_sample_ins;
         const ulong     m_nouts;
         sample** const  m_sample_outs;
         ulong           m_samplerate;
         ulong           m_vectorsize;
-        vector<sInput>  m_inputs;
-        vector<sOutput> m_outputs;
+        vector<sDspInput>  m_inputs;
+        vector<sDspOutput> m_outputs;
         
         bool            m_inplace;
-        bool            m_shouldperform;
-        bool            m_compiled;
+        bool            m_running;
+        ulong           index;
         
-    public:
-        
-        //! The constructor.
-        /** Create the input and output vectors and allocate the input and output sample matrices.
-         @param nins    The number of inputs.
-         @param nouts   The number of outputs.
+        //! Prepare the node to process.
+        /** This function prepares the node to process. It allocates the signals for the inputs and the outputs.
+         @param The chain that owns the node.
          */
-        DspNode(const ulong nins, const ulong nouts) noexcept;
+        void start() throw(DspError&);
         
-        //! The destructor.
-        /** Free the input and ouputs vectors and matrices.
+        //! Call once the process method of the inputs and of the process class.
+        /** This function calls once the process.
          */
-        virtual ~DspNode();
+        inline void tick() noexcept
+        {
+            for(ulong i = 0; i < m_nins; i++)
+            {
+                m_inputs[i]->perform();
+            }
+            perform();
+        }
+        
+        //! Notify the process that the dsp has been stopped.
+        /** This function notifies that the dsp has been stopped.
+         */
+        void stop();
         
         //! Add a node to an input.
         /** This function adds a node to an input.
          @param node The node to add.
          @param index The index of the input.
          */
-        void addInputDspNode(sDspNode node, const ulong index) throw(bool);
+        void addInput(sDspNode node, const ulong index);
         
         //! Add a node to an output.
         /** This function adds a node to an output.
          @param node The node to add.
          @param index The index of the output.
          */
-        void addOutputDspNode(sDspNode node, const ulong index) throw(bool);
+        void addOutput(sDspNode node, const ulong index);
+        
+        //! Remove a node from an input.
+        /** This function removes a node from an input.
+         @param node The node to remove.
+         @param index The index of the input.
+         */
+        void removeInput(sDspNode node, const ulong index);
+        
+        //! Remove a node from an output.
+        /** This function removes a node from an output.
+         @param node The node to remove.
+         @param index The index of the output.
+         */
+        void removeOutput(sDspNode node, const ulong index);
+        
+        //! Prepare the process for the dsp.
+        /** The method preprares the dsp.
+         @param node The dsp node that owns the dsp informations and should be configured.
+         */
+        virtual void prepare() noexcept = 0;
+        
+        //! Perform the process for the dsp.
+        /** The method performs the dsp.
+         @param node The dsp node that owns the dsp informations and the signals.
+         */
+        virtual void perform() noexcept = 0;
+        
+        //! Release the process after the dsp.
+        /** The method releases the process after the dsp.
+         @param node The dsp node that owns the dsp informations.
+         */
+        virtual void release() noexcept = 0;
+        
+    public:
+        
+        //! The constructor.
+        /** Create the input and output vectors and allocate the input and output sample matrices.
+         @param chain   The dsp chain.
+         @param nins    The number of inputs.
+         @param nouts   The number of outputs.
+         */
+        DspNode(sDspChain chain, const ulong nins, const ulong nouts) noexcept;
+        
+        //! The destructor.
+        /** Free the input and ouputs vectors and matrices.
+         */
+        virtual ~DspNode();
+        
+        //! Retrieve the dsp chain of the node.
+        /** This function retrieves the dsp chain of the node.
+         @return The chain of the node.
+         */
+        inline sDspChain getChain() const noexcept
+        {
+            return m_chain.lock();
+        }
+        
+        //! Retrieve the context of the dsp chain.
+        /** This function retrieves the context of the dsp chain.
+         @return The context of the dsp chain.
+         */
+        sDspContext getContext() const noexcept;
+        
+        //! Retrieve the device manager of the context.
+        /** This function retrieves the device manager of the context.
+         @return The device manager of the context.
+         */
+        sDspDeviceManager getDeviceManager() const noexcept;
         
         //! Retrieve the sample rate of the node.
         /** This function retrieves the sample rate of the node.
@@ -150,23 +226,34 @@ namespace Kiwi
             return m_inplace;
         }
         
-        //! Check if the node is valid.
-        /** This function checks if the node is valid.
-         @return True if the node is valid otherwise it returns false.
+        //! Check if the node is running in the dsp chain.
+        /** This function checks if the node is running in the dsp chain.
+         @return True if the node is running in the dsp chain otherwise it returns false.
          */
-        inline bool shouldPerform() const noexcept
+        inline bool isRunning() const noexcept
         {
-            return m_shouldperform;
+            return m_running;
         }
         
-        //! Check if the node is compiled.
-        /** This function checks if the node is compiled.
-         @return True if the node is compiled otherwise it returns false.
+        //! Check if a signal inlet is connected with signal.
+        /** This function checks if a signal inlet is connected with signal.
+         @return True if the inlet is connected otherwise it returns false.
          */
-        inline bool isCompiled() const noexcept
-        {
-            return m_compiled;
-        }
+        bool isInputConnected(const ulong index) const noexcept;
+        
+        //! Check if a signal outlet is connected with signal.
+        /** This function checks if a signal outlet is connected with signal.
+         @return True if the outlet is connected otherwise it returns false.
+         */
+        bool isOutputConnected(const ulong index) const noexcept;
+        
+        //! Retrieve the name of the process.
+        /** The method retrieves the name of the process.
+         @return The name of the process.
+         */
+        virtual string getName() const noexcept = 0;
+        
+    protected:
         
         //! Set if the inputs and outputs signals owns the same vectors.
         /** This function sets if the signals owns the same vectors.
@@ -179,302 +266,6 @@ namespace Kiwi
          @param status The perform status.
          */
         void shouldPerform(const bool status) noexcept;
-        
-        //! Prepare the node to process.
-        /** This function prepares the node to process. It allocates the signals for the inputs and the outputs.
-         @param The context that owns the node.
-         */
-        void compile(scDspContext context) throw(DspError<DspNode>&);
-        
-        //! Call once the process method of the inputs and of the process class.
-        /** This function calls once the process.
-         */
-        void tick() const;
-        
-        //! Notify the process that the dsp has been stopped.
-        /** This function notifies that the dsp has been stopped.
-         */
-        void stop();
-        
-        //! Check if a signal inlet is connected with signal.
-        /** This function checks if a signal inlet is connected with signal.
-         @return True if the inlet is connected otherwise it returns false.
-         */
-        bool isInputConnected(const ulong index) const noexcept;
-        
-        //! Check if a signal outlet is connected with signal.
-        /** This function checks if a signal outlet is connected with signal.
-         @return True if the outlet is connected otherwise it returns false.
-         */
-        bool isOutputConnected(long index) const noexcept;
-        
-        //! Retrieve the name of the process.
-        /** The method retrieves the name of the process.
-         @return The name of the process.
-         */
-        virtual string getName() const noexcept = 0;
-        
-        //! Prepare the process for the dsp.
-        /** The method preprares the dsp.
-         @param node The dsp node that owns the dsp informations and should be configured.
-         */
-        virtual void prepare() noexcept = 0;
-        
-        //! Perform the process for the dsp.
-        /** The method performs the dsp.
-         @param node The dsp node that owns the dsp informations and the signals.
-         */
-        virtual void perform() const noexcept = 0;
-        
-        //! Release the process after the dsp.
-        /** The method releases the process after the dsp.
-         @param node The dsp node that owns the dsp informations.
-         */
-        virtual void release() noexcept = 0;
-    };
-    
-    // ================================================================================ //
-    //                                      DSP OUTPUT                                  //
-    // ================================================================================ //
-    
-    //! The ouput manages the sample vectors of one ouput of a node.
-    /**
-     The ouput owns a vector of sample and manages the ownership and sharing of the vector between several dsp nodes.
-     */
-    class DspNode::Output
-    {
-    private:
-        friend DspContext;
-        const ulong   m_index;
-        sample*       m_vector;
-        bool          m_owner;
-        DspNodeSet    m_links;
-        
-    public:
-        //! Constructor.
-        /** You should never have to call this method.
-         */
-        Output(const ulong index) noexcept;
-        
-        //! Destructor.
-        /** You should never have to call this method.
-         */
-        ~Output();
-        
-        //! Add a node to the output.
-        /** This function adds a node to the output.
-         @param The node to add.
-         */
-        void addDspNode(sDspNode node) throw(bool);
-        
-        //! Prepare the output.
-        /** This function prepare the output.
-         @param The owner node.
-         */
-        void prepare(sDspNode node) throw(DspError<DspNode>&);
-        
-        //! Retrieve if the links are empty.
-        /** This function retrieves if the links are empty.
-         @param true if if the links are empty, otherwise false.
-         */
-        inline bool empty() const noexcept
-        {
-            return m_links.empty();
-        }
-        
-        //! Retrieve the number of links.
-        /** This function retrieves the number of links.
-         @param The number of links.
-         */
-        inline ulong size() const noexcept
-        {
-            return (ulong)m_links.size();
-        }
-        
-        //! Retrieve if the output has a node.
-        /** This function retrieves if the output has a node.
-         @param true if the output has a node, otherwise false.
-         */
-        inline bool hasDspNode(sDspNode node) const
-        {
-            return m_links.find(node) != m_links.end();
-        }
-        
-        //! Check if the output is the owner of the vector.
-        /** This function checks if the output is the owner of the vector.
-         @return The owner status.
-         */
-        inline bool isOwner() const noexcept
-        {
-            return m_owner;
-        }
-        
-        //! Retrieve the vector of the output.
-        /** This function retrieves the vector of the output.
-         @return The vector of the output.
-         */
-        inline sample* getVector() const noexcept
-        {
-            return m_vector;
-        }
-    };
-    
-    // ================================================================================ //
-    //                                      DSP INPUT                                   //
-    // ================================================================================ //
-    
-    //! The input manages the sample vectors of one input of a node.
-    /**
-     The input owns a vector of sample and manages the ownership and sharing of the vector between several dsp nodes.
-     */
-    class DspNode::Input
-    {
-    private:
-        friend DspContext;
-        const ulong   m_index;
-        ulong         m_size;
-        sample*       m_vector;
-        ulong         m_nothers;
-        sample**      m_others;
-        DspNodeSet    m_links;
-    public:
-        
-        //! Constructor.
-        /** You should never have to call this method.
-         */
-        Input(const ulong index) noexcept;
-        
-        //! Destructor.
-        /** You should never have to call this method.
-         */
-        ~Input();
-        
-        //! Add a node to the input.
-        /** This adds  a node to the input.
-         @param The node to add.
-         */
-        void addDspNode(sDspNode node) throw(bool);
-        
-        //! Prepare the input.
-        /** This function prepare the input.
-         */
-        void prepare(sDspNode node) throw(DspError<DspNode>&);
-        
-        //! Retrieve if the links are empty.
-        /** This function retrieves if the links are empty.
-         @param true if if the links are empty, otherwise false.
-         */
-        inline bool empty() const noexcept
-        {
-            return m_links.empty();
-        }
-        
-        //! Retrieve the number of links.
-        /** This function retrieves the number of links.
-         @param The number of links.
-         */
-        inline ulong size() const noexcept
-        {
-            return (ulong)m_links.size();
-        }
-        
-        //! Retrieve the vector of the input.
-        /** This function retrieves the vector of the input.
-         @return The vector of the input.
-         */
-        inline sample* getVector() const noexcept
-        {
-            return m_vector;
-        }
-        
-        //! Perform the copy of the links to input vector.
-        /** This function perform sthe copy of the links to input vector.
-         */
-        inline void perform() noexcept
-        {
-            if(m_nothers)
-            {
-                Signal::vcopy(m_size, m_others[0], m_vector);
-            }
-            for(ulong i = 1; i < m_nothers; i++)
-            {
-                Signal::vadd(m_size, m_others[i], m_vector);
-            }
-        }
-    };
-    
-    // ================================================================================ //
-    //                                      DSP LINK                                    //
-    // ================================================================================ //
-    
-    //! The dsp link owns the basic informations of a link between two node.
-    /**
-     The dsp link owns an input and an output node and the indices of the input and the ouput.
-     */
-    class DspLink
-    {
-    private:
-        const wDspNode  m_from;
-        const ulong     m_output;
-        const wDspNode  m_to;
-        const ulong     m_input;
-    public:
-        
-        //! Constructor.
-        /** You should never have to call this method.
-         */
-        DspLink(const sDspNode from, const ulong output, const sDspNode to, const ulong input) noexcept :
-        m_from(from),
-        m_output(output),
-        m_to(to),
-        m_input(input)
-        {
-            ;
-        }
-        
-        //! Destructor.
-        /** You should never have to call this method.
-         */
-        ~DspLink()
-        {
-            ;
-        }
-        
-        //! Retrieve the output node.
-        /** The function retrieves the output node of the link.
-         @return The output node.
-         */
-        inline sDspNode getDspNodeFrom() const noexcept
-        {
-            return m_from.lock();
-        }
-        
-        //! Retrieve the input node.
-        /** The function retrieves the input node of the link.
-         @return The input node.
-         */
-        inline sDspNode getDspNodeTo() const noexcept
-        {
-            return m_to.lock();
-        }
-        
-        //! Retrieve the index of the output of the link.
-        /** The function retrieves the index of the output of the link.
-         @return The index of the output of the link.
-         */
-        inline ulong getOutputIndex() const noexcept
-        {
-            return m_output;
-        }
-        
-        //! Retrieve the index of the input of the link.
-        /** The function retrieves the index of the input of the link.
-         @return The index of the input of the link.
-         */
-        inline ulong getInputIndex() const noexcept
-        {
-            return m_input;
-        }
     };
 }
 

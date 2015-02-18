@@ -24,7 +24,7 @@
 #ifndef __DEF_KIWI_DSP_GENERATOR__
 #define __DEF_KIWI_DSP_GENERATOR__
 
-#include "../Context/DspContext.h"
+#include "../Context/DspDevice.h"
 
 namespace Kiwi
 {
@@ -37,11 +37,11 @@ namespace Kiwi
     private:
         sample m_value;
     public:
-        DspSig(const sample value = 0.) noexcept;
+        DspSig(sDspChain chain, const sample value = 0.) noexcept;
         ~DspSig();
         string getName() const noexcept override;
         void prepare() noexcept override;
-        void perform() const noexcept override;
+        void perform() noexcept override;
         void release() noexcept override;
         void setValue(const sample value) noexcept;
         sample getValue() const noexcept;
@@ -63,7 +63,7 @@ namespace Kiwi
         ~Phasor();
         string getName() const noexcept override;
         void prepare() noexcept override;
-        void perform() const noexcept override;
+        void perform() noexcept override;
         void release() noexcept override;
     };
     
@@ -77,7 +77,7 @@ namespace Kiwi
         ~Phasor();
         string getName() const noexcept override;
         void prepare() noexcept override;
-        void perform() const noexcept override;
+        void perform() noexcept override;
         void release() noexcept override;
     };*/
     
@@ -88,14 +88,14 @@ namespace Kiwi
     class DspNoise : public DspNode
     {
     private:
-        static  int c_seed;
-        mutable int m_seed;
+        static int c_seed;
+        int m_seed;
     public:
-        DspNoise(const int seed = 0.) noexcept;
+        DspNoise(sDspChain chain, const int seed = 0.) noexcept;
         ~DspNoise();
         string getName() const noexcept override;
         void prepare() noexcept override;
-        void perform() const noexcept override;
+        void perform() noexcept override;
         void release() noexcept override;
         static int nextSeed() noexcept;
     };

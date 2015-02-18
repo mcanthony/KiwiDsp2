@@ -25,6 +25,7 @@
 #define __DEF_KIWI_DSP__
 
 #include "Modules/DspModules.h"
+#include "Context/DspDevice.h"
 
 #endif
 

@@ -21,46 +21,63 @@
  ==============================================================================
 */
 
-#ifndef __DEF_KIWI_DSP_MATH__
-#define __DEF_KIWI_DSP_MATH__
-
-#include "../Context/DspDevice.h"
+#include "DspDevice.h"
 
 namespace Kiwi
 {
     // ================================================================================ //
-    //                                      PLUS                                        //
+    //                                      DSP DEVICE                                  //
     // ================================================================================ //
     
-    template <DspMode mode> class DspPlus;
-    
-    template <>class DspPlus<Scalar> : public DspNode
+    DspDeviceManager::DspDeviceManager() noexcept
     {
-    private:
-        sample m_value;
-    public:
-        DspPlus(sDspChain chain, const sample value = 0.) noexcept;
-        ~DspPlus();
-        string getName() const noexcept override;
-        void prepare() noexcept override;
-        void perform() noexcept override;
-        void release() noexcept override;
-        void setValue(const sample value) noexcept;
-        sample getValue() const noexcept;
-    };
+        ;
+    }
     
-    template <>class DspPlus<Vector> : public DspNode
+    DspDeviceManager::~DspDeviceManager() noexcept
     {
-    public:
-        DspPlus(sDspChain chain) noexcept;
-        ~DspPlus();
-        string getName() const noexcept override;
-        void prepare() noexcept override;
-        void perform() noexcept override;
-        void release() noexcept override;
-    };
+        lock_guard<mutex> guard(m_mutex);
+        m_contexts.clear();
+    }
+    
+    void DspDeviceManager::add(sDspContext context)
+    {
+        if(context)
+        {
+            lock_guard<mutex> guard(m_mutex);
+            if(find(m_contexts.begin(), m_contexts.end(), context) == m_contexts.end())
+            {
+                m_contexts.push_back(context);
+            }
+        }
+    }
+    
+    void DspDeviceManager::remove(sDspContext context)
+    {
+        if(context)
+        {
+            lock_guard<mutex> guard(m_mutex);
+            auto it = find(m_contexts.begin(), m_contexts.end(), context);
+            if(it != m_contexts.end())
+            {
+                m_contexts.erase(it);
+            }
+        }
+    }
 }
 
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

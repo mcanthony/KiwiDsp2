@@ -21,44 +21,33 @@
  ==============================================================================
 */
 
-#ifndef __DEF_KIWI_DSP_MATH__
-#define __DEF_KIWI_DSP_MATH__
+#ifndef __DEF_KIWI_DSP_IO__
+#define __DEF_KIWI_DSP_IO__
 
 #include "../Context/DspDevice.h"
 
 namespace Kiwi
 {
     // ================================================================================ //
-    //                                      PLUS                                        //
+    //                                      DAC                                         //
     // ================================================================================ //
     
-    template <DspMode mode> class DspPlus;
-    
-    template <>class DspPlus<Scalar> : public DspNode
+    class DspDac : public DspNode
     {
     private:
-        sample m_value;
+        vector<ulong>   m_channels;
+        vector<float*>  m_outputs;
     public:
-        DspPlus(sDspChain chain, const sample value = 0.) noexcept;
-        ~DspPlus();
+        DspDac(sDspChain chain, vector<ulong> const& channels = {}) noexcept;
+        ~DspDac();
         string getName() const noexcept override;
         void prepare() noexcept override;
         void perform() noexcept override;
         void release() noexcept override;
-        void setValue(const sample value) noexcept;
-        sample getValue() const noexcept;
+        void setChannels(vector<ulong> const& channels) noexcept;
+        void getChannels(vector<ulong>& channels) noexcept;
     };
     
-    template <>class DspPlus<Vector> : public DspNode
-    {
-    public:
-        DspPlus(sDspChain chain) noexcept;
-        ~DspPlus();
-        string getName() const noexcept override;
-        void prepare() noexcept override;
-        void perform() noexcept override;
-        void release() noexcept override;
-    };
 }
 
 #endif

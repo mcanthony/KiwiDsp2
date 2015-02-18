@@ -22,195 +22,17 @@
 */
 
 #include "DspNode.h"
+#include "DspChain.h"
 #include "DspContext.h"
 
 namespace Kiwi
 {
     // ================================================================================ //
-    //                                      DSP OUTPUT                                  //
-    // ================================================================================ //
-    
-    DspNode::Output::Output(const ulong index) noexcept :
-    m_index(index),
-    m_vector(nullptr),
-    m_owner(false)
-    {
-        
-    }
-    
-    DspNode::Output::~Output()
-    {
-        if(m_owner && m_vector)
-        {
-            delete [] m_vector;
-        }
-        m_links.clear();
-    }
-    
-    void DspNode::Output::addDspNode(sDspNode node) throw(bool)
-    {
-        if(!m_links.insert(node).second)
-        {
-            throw false;
-        }
-    }
-    
-    void DspNode::Output::prepare(sDspNode node) throw(DspError<DspNode>&)
-    {
-        if(m_owner && m_vector)
-        {
-            delete [] m_vector;
-            m_vector = nullptr;
-        }
-        m_owner     = false;
-        
-        if(node)
-        {
-            if(node->isInplace() && node->getNumberOfInputs() > m_index)
-            {
-                m_vector = node->m_inputs[m_index]->getVector();
-                if(!m_vector)
-                {
-                    throw DspError<DspNode>(node, node, DspError<DspNode>::Inplace);
-                }
-            }
-            if(!m_vector)
-            {
-                m_owner     = true;
-                try
-                {
-                    m_vector    = new sample[node->getVectorSize()];
-                }
-                catch(bad_alloc& e)
-                {
-                    throw DspError<DspNode>(node, node, DspError<DspNode>::Alloc);
-                }
-                
-            }
-        }
-    }
-    
-    // ================================================================================ //
-    //                                      DSP INPUT                                   //
-    // ================================================================================ //
-    
-    DspNode::Input::Input(const ulong index) noexcept :
-    m_index(index),
-    m_vector(nullptr),
-    m_nothers(0),
-    m_others(nullptr)
-    {
-        
-    }
-    
-    DspNode::Input::~Input()
-    {
-        if(m_nothers && m_others)
-        {
-            delete [] m_others;
-            m_others = nullptr;
-        }
-        if(m_vector)
-        {
-            delete [] m_vector;
-            m_vector = nullptr;
-        }
-        m_links.clear();
-    }
-    
-    void DspNode::Input::addDspNode(sDspNode node) throw(bool)
-    {
-        if(!m_links.insert(node).second)
-        {
-            throw false;
-        }
-    }
-    
-    void DspNode::Input::prepare(sDspNode node) throw(DspError<DspNode>&)
-    {
-        if(m_vector)
-        {
-            delete [] m_vector;
-            m_vector = nullptr;
-        }
-        if(m_nothers && m_others)
-        {
-            delete [] m_others;
-            m_others = nullptr;
-        }
-        m_nothers   = 0;
-        
-        if(node)
-        {
-            m_size = node->getVectorSize();
-            for(auto it = m_links.begin(); it != m_links.end(); )
-            {
-                sDspNode in = (*it).lock();
-                if(in)
-                {
-                    ++it;
-                }
-                else
-                {
-                    it = m_links.erase(it);
-                }
-            }
-            m_nothers = m_links.size();
-            m_others  = new sample*[m_nothers];
-            ulong inc = 0;
-            for(auto it = m_links.begin(); it != m_links.end(); ++it)
-            {
-                sDspNode in = (*it).lock();
-                if(in)
-                {
-                    if(in->getSampleRate() != node->getSampleRate())
-                    {
-                        throw DspError<DspNode>(node, in, DspError<DspNode>::SampleRate);
-                    }
-                    else if(in->getVectorSize() != node->getVectorSize())
-                    {
-                        throw DspError<DspNode>(node, in, DspError<DspNode>::VectorSize);
-                    }
-                    else
-                    {
-                        sOutput output = nullptr;
-                        for(vector<DspNodeSet>::size_type i = 0; i < in->m_outputs.size(); i++)
-                        {
-                            if(in->m_outputs[i]->hasDspNode(node))
-                            {
-                                output = in->m_outputs[i];
-                                break;
-                            }
-                        }
-                        if(output)
-                        {
-                            m_others[inc++] = output->getVector();
-                        }
-                        else
-                        {
-                            throw DspError<DspNode>(node, in, DspError<DspNode>::Recopy);
-                        }
-                    }
-                }
-            }
-            try
-            {
-                m_vector    = new sample[node->getVectorSize()];
-            }
-            catch(bad_alloc& e)
-            {
-                throw DspError<DspNode>(node, node, DspError<DspNode>::Alloc);
-            }
-            
-        }
-        
-    }
-    
-    // ================================================================================ //
     //                                      DSP NODE                                    //
     // ================================================================================ //
     
-    DspNode::DspNode(const ulong nins, const ulong nouts) noexcept :
+    DspNode::DspNode(sDspChain chain, const ulong nins, const ulong nouts) noexcept :
+    m_chain(chain),
     m_nins(nins),
     m_sample_ins(new sample*[m_nins]),
     m_nouts(nouts),
@@ -218,16 +40,15 @@ namespace Kiwi
     m_samplerate(0),
     m_vectorsize(0),
     m_inplace(true),
-    m_shouldperform(false),
-    m_compiled(false)
+    m_running(false)
     {
         for(ulong i = 0; i < getNumberOfInputs(); i++)
         {
-            m_inputs.push_back(make_shared<Input>(i));
+            m_inputs.push_back(make_shared<DspInput>(i));
         }
         for(ulong i = 0; i < getNumberOfOutputs(); i++)
         {
-            m_outputs.push_back(make_shared<Output>(i));
+            m_outputs.push_back(make_shared<DspOutput>(i));
         }
     }
     
@@ -239,41 +60,61 @@ namespace Kiwi
         m_outputs.clear();
     }
     
-    void DspNode::addInputDspNode(sDspNode node, const ulong index) throw(bool)
+    sDspContext DspNode::getContext() const noexcept
     {
-        if(index < (ulong)m_inputs.size())
+        sDspChain chain = getChain();
+        if(chain)
         {
-            try
-            {
-                m_inputs[index]->addDspNode(node);
-            }
-            catch(bool)
-            {
-                throw false;
-            }
+            return chain->getContext();
         }
         else
         {
-            throw true;
+            return nullptr;
         }
     }
     
-    void DspNode::addOutputDspNode(sDspNode node, const ulong index) throw(bool)
+    sDspDeviceManager DspNode::getDeviceManager() const noexcept
     {
-        if(index < (ulong)m_outputs.size())
+        sDspContext context = getContext();
+        if(context)
         {
-            try
-            {
-                m_outputs[index]->addDspNode(node);
-            }
-            catch(bool)
-            {
-                throw false;
-            }
+            return context->getDeviceManager();
         }
         else
         {
-            throw true;
+            return nullptr;
+        }
+    }
+    
+    void DspNode::addInput(sDspNode node, const ulong index)
+    {
+        if(index < (ulong)m_inputs.size())
+        {
+            m_inputs[index]->add(node);
+        }
+    }
+    
+    void DspNode::addOutput(sDspNode node, const ulong index)
+    {
+        if(index < (ulong)m_outputs.size())
+        {
+            m_outputs[index]->add(node);
+        }
+    }
+    
+    void DspNode::removeInput(sDspNode node, const ulong index)
+    {
+        if(index < (ulong)m_outputs.size())
+        {
+            m_inputs[index]->remove(node);
+        }
+    }
+    
+    void DspNode::removeOutput(sDspNode node, const ulong index)
+    {
+        if(index < (ulong)m_outputs.size())
+        {
+            m_outputs[index]->remove(node);
         }
     }
     
@@ -282,7 +123,7 @@ namespace Kiwi
         return !m_inputs[index]->empty();
     }
     
-    bool DspNode::isOutputConnected(long index) const noexcept
+    bool DspNode::isOutputConnected(const ulong index) const noexcept
     {
         return !m_outputs[index]->empty();
     }
@@ -294,29 +135,35 @@ namespace Kiwi
     
     void DspNode::shouldPerform(const bool status) noexcept
     {
-        m_shouldperform = status;
+        m_running = status;
     }
     
-    void DspNode::compile(scDspContext context) throw(DspError<DspNode>&)
+    void DspNode::start() throw(DspError&)
     {
-        if(context)
+        sDspChain chain = getChain();
+        if(chain)
         {
-            m_shouldperform = true;
-            m_samplerate = context->getSampleRate();
-            m_vectorsize = context->getVectorSize();
+            if(m_running)
+            {
+                stop();
+            }
+            m_running = true;
+            m_samplerate = chain->getSampleRate();
+            m_vectorsize = chain->getVectorSize();
             
             prepare();
             
-            if(shouldPerform())
+            if(m_running)
             {
                 for(ulong i = 0; i < getNumberOfInputs(); i++)
                 {
                     try
                     {
-                        m_inputs[i]->prepare(shared_from_this());
+                        m_inputs[i]->start(shared_from_this());
                     }
-                    catch(DspError<DspNode>& e)
+                    catch(DspError& e)
                     {
+                        m_running = false;
                         throw e;
                     }
                     m_sample_ins[i] = m_inputs[i]->getVector();
@@ -325,37 +172,33 @@ namespace Kiwi
                 {
                     try
                     {
-                        m_outputs[i]->prepare(shared_from_this());
+                        m_outputs[i]->start(shared_from_this());
                     }
-                    catch(DspError<DspNode>& e)
+                    catch(DspError& e)
                     {
+                        m_running = false;
                         throw e;
                     }
                     
                     m_sample_outs[i] = m_outputs[i]->getVector();
                 }
             }
-            
-            m_compiled = true;
         }
-    }
-    
-    void DspNode::tick() const
-    {
-        for(ulong i = 0; i < getNumberOfInputs(); i++)
-        {
-            m_inputs[i]->perform();
-        }
-        perform();
     }
     
     void DspNode::stop()
     {
         release();
-        m_shouldperform = false;
-        m_compiled      = false;
+        for(ulong i = 0; i < getNumberOfInputs(); i++)
+        {
+            m_inputs[i]->clear();
+        }
+        for(ulong i = 0; i < getNumberOfOutputs(); i++)
+        {
+            m_outputs[i]->clear();
+        }
+        m_running = false;
     }
-
 }
 
 

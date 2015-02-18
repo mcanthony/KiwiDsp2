@@ -29,7 +29,7 @@ namespace Kiwi
     //                                      SIG                                         //
     // ================================================================================ //
     
-    DspSig::DspSig(const sample value) noexcept : DspNode(0, 1), m_value(value)
+    DspSig::DspSig(sDspChain chain, const sample value) noexcept : DspNode(chain, 0, 1), m_value(value)
     {
         ;
     }
@@ -49,10 +49,9 @@ namespace Kiwi
         shouldPerform(isOutputConnected(0));
     }
     
-    void DspSig::perform() const noexcept
+    void DspSig::perform() noexcept
     {
         Signal::vfill(getVectorSize(), m_value, getOutputsSamples()[0]);
-        Signal::vpost(5, getOutputsSamples()[0]);
     }
     
     void DspSig::release() noexcept
@@ -96,7 +95,7 @@ namespace Kiwi
         m_step = 1. / (sample)getSampleRate();
     }
     
-    void Phasor<Scalar>::perform() const noexcept
+    void Phasor<Scalar>::perform() noexcept
     {
         m_phase = Signal::vphasor(getVectorSize(), m_step, m_phase, getOutputsSamples()[0]);
         sample* input0 = getInputsSamples()[0];
@@ -119,7 +118,7 @@ namespace Kiwi
     
     int DspNoise::c_seed = 0;
     
-    DspNoise::DspNoise(const int seed) noexcept : DspNode(0, 1), m_seed(seed)
+    DspNoise::DspNoise(sDspChain chain, const int seed) noexcept : DspNode(chain, 0, 1), m_seed(seed)
     {
         ;
     }
@@ -139,10 +138,9 @@ namespace Kiwi
         shouldPerform(isOutputConnected(0));
     }
     
-    void DspNoise::perform() const noexcept
+    void DspNoise::perform() noexcept
     {
         m_seed = Signal::vnoise(getVectorSize(), m_seed, getOutputsSamples()[0]);
-        Signal::vpost(5, getOutputsSamples()[0]);
     }
     
     void DspNoise::release() noexcept

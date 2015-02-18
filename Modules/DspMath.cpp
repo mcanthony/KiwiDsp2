@@ -29,7 +29,7 @@ namespace Kiwi
     //                                      PLUS                                        //
     // ================================================================================ //
     
-    DspPlus<Scalar>::DspPlus(const sample value) noexcept : DspNode(1, 1),
+    DspPlus<Scalar>::DspPlus(sDspChain chain, const sample value) noexcept : DspNode(chain, 1, 1),
     m_value(value)
     {
         ;
@@ -50,10 +50,9 @@ namespace Kiwi
         shouldPerform(isOutputConnected(0));
     }
     
-    void DspPlus<Scalar>::perform() const noexcept
+    void DspPlus<Scalar>::perform() noexcept
     {
         Signal::vsadd(getVectorSize(), m_value, getOutputsSamples()[0]);
-        Signal::vpost(5, getOutputsSamples()[0]);
     }
     
     void DspPlus<Scalar>::release() noexcept
@@ -71,7 +70,7 @@ namespace Kiwi
         return m_value;
     }
     
-    DspPlus<Vector>::DspPlus() noexcept : DspNode(2, 1)
+    DspPlus<Vector>::DspPlus(sDspChain chain) noexcept : DspNode(chain, 2, 1)
     {
         ;
     }
@@ -92,10 +91,9 @@ namespace Kiwi
         shouldPerform(isOutputConnected(0));
     }
     
-    void DspPlus<Vector>::perform() const noexcept
+    void DspPlus<Vector>::perform() noexcept
     {
         Signal::vadd(getVectorSize(), getInputsSamples()[1], getOutputsSamples()[0]);
-        Signal::vpost(5, getOutputsSamples()[0]);
     }
     
     void DspPlus<Vector>::release() noexcept

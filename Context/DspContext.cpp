@@ -22,6 +22,7 @@
 */
 
 #include "DspContext.h"
+#include "DspDevice.h"
 
 namespace Kiwi
 {
@@ -29,174 +30,137 @@ namespace Kiwi
     //                                      DSP CONTEXT                                 //
     // ================================================================================ //
     
-    DspContext::DspContext() noexcept :
-    m_samplerate(0),
-    m_vectorsize(0),
-    m_compiled(false)
+    DspContext::DspContext(sDspDeviceManager device) noexcept :
+    m_device(device),
+    m_running(false)
     {
         
     }
     
     DspContext::~DspContext()
     {
-        if(m_compiled)
+        if(m_running)
         {
             stop();
         }
-        m_nodes.clear();
+        m_chains.clear();
     }
     
-    void DspContext::add(sDspNode node) throw(DspError<DspNode>&)
+    ulong DspContext::getSampleRate() const noexcept
     {
-        if(node)
+        sDspDeviceManager device = getDeviceManager();
+        if(device)
         {
-            lock_guard<mutex> guard(m_mutex);
-            if(find(m_nodes.begin(), m_nodes.end(), node) != m_nodes.end())
-            {
-                throw DspError<DspNode>(node, node, DspError<DspNode>::Duplicate);
-            }
-            m_nodes.push_back(node);
+            return device->getSampleRate();
         }
         else
         {
-            throw DspError<DspNode>(node, node, DspError<DspNode>::Valid);
+            return 0;
         }
     }
     
-    void DspContext::add(sDspLink link) throw(DspError<DspLink>&)
+    ulong DspContext::getVectorSize() const noexcept
     {
-        if(link)
+        sDspDeviceManager device = getDeviceManager();
+        if(device)
         {
-            sDspNode from   = link->getDspNodeFrom();
-            sDspNode to     = link->getDspNodeTo();
-            if(from && to && from != to)
-            {
-                lock_guard<mutex> guard(m_mutex);
-                if(find(m_nodes.begin(), m_nodes.end(), from) == m_nodes.end())
-                {
-                    throw DspError<DspLink>(link, DspError<DspLink>::From);
-                }
-                if(find(m_nodes.begin(), m_nodes.end(), to) == m_nodes.end())
-                {
-                    throw DspError<DspLink>(link, DspError<DspLink>::To);
-                }
-                
-                try
-                {
-                    from->addOutputDspNode(to, link->getOutputIndex());
-                }
-                catch(bool e)
-                {
-                    if(e)
-                    {
-                        throw DspError<DspLink>(link, DspError<DspLink>::Input);
-                    }
-                    else
-                    {
-                        throw DspError<DspLink>(link, DspError<DspLink>::Duplicate);
-                    }
-                }
-                
-                try
-                {
-                    to->addInputDspNode(from, link->getInputIndex());
-                }
-                catch(bool e)
-                {
-                    if(e)
-                    {
-                        throw DspError<DspLink>(link, DspError<DspLink>::Output);
-                    }
-                    else
-                    {
-                        throw DspError<DspLink>(link, DspError<DspLink>::Duplicate);
-                    }
-                }
-                return;
-            }
+            return device->getVectorSize();
         }
-        throw DspError<DspLink>(link, DspError<DspLink>::Valid);
-    }
-    
-    void DspContext::sortDspNodes(set<sDspNode>& nodes, sDspNode node) throw(DspError<DspNode>&)
-    {
-        if(!node->isCompiled())
+        else
         {
-            nodes.insert(node);
-            for(vector<sDspNode>::size_type i = 0; i < node->getNumberOfInputs(); i++)
-            {
-                DspNode::DspNodeSet& link = node->m_inputs[i]->m_links;
-                for(auto it = link.begin(); it != link.end(); ++it)
-                {
-                    sDspNode input = (*it).lock();
-                    if(input && !input->isCompiled())
-                    {
-                        if(nodes.find(input) != nodes.end())
-                        {
-                            throw DspError<DspNode>(input, node, DspError<DspNode>::Loop);
-                        }
-                        else
-                        {
-                            sortDspNodes(nodes, input);
-                        }
-                    }
-                }
-            }
-            
-            try
-            {
-                node->compile(shared_from_this());
-            }
-            catch(DspError<DspNode>& e)
-            {
-                throw e;
-            }
-            if(node->shouldPerform())
-            {
-                m_nodes.push_back(node);
-            }
-            nodes.erase(node);
+            return 0;
         }
     }
     
-    void DspContext::compile(const ulong samplerate, const ulong vectorsize) throw(DspError<DspNode>&)
+    void DspContext::add(sDspChain chain)
     {
-        if(m_compiled)
+        if(chain)
         {
-            stop();
-        }
-        m_samplerate = samplerate;
-        m_vectorsize = vectorsize;
-        
-        lock_guard<mutex> guard(m_mutex);
-        set<sDspNode> nodes;
-        vector<sDspNode> processes;
-        processes.swap(m_nodes);
-        
-        for(auto it = processes.begin(); it != processes.end(); ++it)
-        {
-            try
+            lock_guard<mutex> guard(m_mutex);
+            if(find(m_chains.begin(), m_chains.end(), chain) == m_chains.end())
             {
-                sortDspNodes(nodes, (*it));
-            }
-            catch(DspError<DspNode>& e)
-            {
-                throw e;
+                m_chains.push_back(chain);
             }
         }
-        nodes.clear();
-        
-        m_compiled = true;
+    }
+    
+    void DspContext::remove(sDspChain chain)
+    {
+        bool finded = false;
+        if(chain)
+        {
+            lock_guard<mutex> guard(m_mutex);
+            auto it = find(m_chains.begin(), m_chains.end(), chain);
+            if(it != m_chains.end())
+            {
+                m_chains.erase(it);
+                finded = true;
+            }
+        }
+        if(finded && m_running)
+        {
+            chain->stop();
+        }
+    }
+    
+    void DspContext::start()
+    {
+        sDspDeviceManager device = m_device.lock();
+        if(device)
+        {
+            if(m_running)
+            {
+                stop();
+            }
+            device->add(shared_from_this());
+            m_running = true;
+        }
     }
     
     void DspContext::stop()
     {
-        lock_guard<mutex> guard(m_mutex);
-        for(vector<sDspNode>::size_type i = 0; i < m_nodes.size(); i++)
+        if(m_running)
         {
-            m_nodes[i]->stop();
+            lock_guard<mutex> guard(m_mutex);
+            for(vector<sDspNode>::size_type i = 0; i < m_chains.size(); i++)
+            {
+                if(m_chains[i]->isRunning())
+                {
+                    m_chains[i]->stop();
+                }
+            }
+            sDspDeviceManager device = m_device.lock();
+            if(device)
+            {
+                device->remove(shared_from_this());
+            }
+            m_running = false;
         }
-        m_compiled = false;
+    }
+    
+    void DspContext::resume(const bool state)
+    {
+        if(state && !m_running)
+        {
+            start();
+        }
+        else if(!state)
+        {
+            stop();
+        }
+    }
+    
+    bool DspContext::suspend()
+    {
+        if(m_running)
+        {
+            stop();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
 

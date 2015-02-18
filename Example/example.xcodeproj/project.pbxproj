@@ -7,11 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F01F8291A9210C1008DEDC8 /* DspContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8F01F8271A9210C1008DEDC8 /* DspContext.cpp */; };
+		8F01F82B1A93194B008DEDC8 /* DspDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8F01F82A1A93194B008DEDC8 /* DspDevice.cpp */; };
 		8F580B521A78FEB0002A790B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8F580B511A78FEB0002A790B /* main.cpp */; };
 		8F580B6F1A78FECB002A790B /* DspGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8F580B611A78FECB002A790B /* DspGenerator.cpp */; };
 		8F580B701A78FECB002A790B /* DspMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8F580B631A78FECB002A790B /* DspMath.cpp */; };
 		8F580B751A78FF7A002A790B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F580B741A78FF7A002A790B /* Accelerate.framework */; };
-		8FFC25911A8E336500B49898 /* DspContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC258A1A8E336500B49898 /* DspContext.cpp */; };
+		8FBD61651A8E37D700F252C1 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FBD61641A8E37D700F252C1 /* CoreAudio.framework */; };
+		8FBD61681A8E37E400F252C1 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FBD61661A8E37E400F252C1 /* AudioToolbox.framework */; };
+		8FBD61691A8E37E400F252C1 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FBD61671A8E37E400F252C1 /* AudioUnit.framework */; };
+		8FBD616B1A8E37EC00F252C1 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FBD616A1A8E37EC00F252C1 /* CoreServices.framework */; };
+		8FBD616D1A8E37F300F252C1 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FBD616C1A8E37F300F252C1 /* Carbon.framework */; };
+		8FBD61711A8E39D000F252C1 /* libportaudio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FBD61701A8E39D000F252C1 /* libportaudio.a */; };
+		8FC0469F1A9399990083ED52 /* DspIo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0469D1A9399990083ED52 /* DspIo.cpp */; };
+		8FC046A21A94F6F30083ED52 /* DspIoput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8FC046A01A94F6F30083ED52 /* DspIoput.cpp */; };
+		8FC6E75B1A9086A500969509 /* DspPortAudio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8FC6E75A1A9086A500969509 /* DspPortAudio.cpp */; };
+		8FFC25911A8E336500B49898 /* DspChain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC258A1A8E336500B49898 /* DspChain.cpp */; };
 		8FFC25931A8E336500B49898 /* DspNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC258E1A8E336500B49898 /* DspNode.cpp */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +39,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8F01F8271A9210C1008DEDC8 /* DspContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspContext.cpp; sourceTree = "<group>"; };
+		8F01F8281A9210C1008DEDC8 /* DspContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspContext.h; sourceTree = "<group>"; };
+		8F01F82A1A93194B008DEDC8 /* DspDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspDevice.cpp; sourceTree = "<group>"; };
 		8F580B4E1A78FEB0002A790B /* example */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = example; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F580B511A78FEB0002A790B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		8F580B5D1A78FECB002A790B /* Dsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Dsp.h; path = ../../Dsp.h; sourceTree = "<group>"; };
@@ -37,8 +51,21 @@
 		8F580B641A78FECB002A790B /* DspMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspMath.h; sourceTree = "<group>"; };
 		8F580B651A78FECB002A790B /* DspModules.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspModules.h; sourceTree = "<group>"; };
 		8F580B741A78FF7A002A790B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		8FFC258A1A8E336500B49898 /* DspContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspContext.cpp; sourceTree = "<group>"; };
-		8FFC258B1A8E336500B49898 /* DspContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspContext.h; sourceTree = "<group>"; };
+		8FBD61641A8E37D700F252C1 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		8FBD61661A8E37E400F252C1 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		8FBD61671A8E37E400F252C1 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		8FBD616A1A8E37EC00F252C1 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		8FBD616C1A8E37F300F252C1 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		8FBD61701A8E39D000F252C1 /* libportaudio.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libportaudio.a; path = ../ThirdParty/PortAudio/lib/.libs/libportaudio.a; sourceTree = "<group>"; };
+		8FC0469D1A9399990083ED52 /* DspIo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspIo.cpp; sourceTree = "<group>"; };
+		8FC0469E1A9399990083ED52 /* DspIo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspIo.h; sourceTree = "<group>"; };
+		8FC046A01A94F6F30083ED52 /* DspIoput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspIoput.cpp; sourceTree = "<group>"; };
+		8FC046A11A94F6F30083ED52 /* DspIoput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspIoput.h; sourceTree = "<group>"; };
+		8FC6E7571A8E46C000969509 /* DspDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspDevice.h; sourceTree = "<group>"; };
+		8FC6E7591A90822000969509 /* DspPortAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspPortAudio.h; sourceTree = "<group>"; };
+		8FC6E75A1A9086A500969509 /* DspPortAudio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspPortAudio.cpp; sourceTree = "<group>"; };
+		8FFC258A1A8E336500B49898 /* DspChain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspChain.cpp; sourceTree = "<group>"; };
+		8FFC258B1A8E336500B49898 /* DspChain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspChain.h; sourceTree = "<group>"; };
 		8FFC258D1A8E336500B49898 /* DspError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspError.h; sourceTree = "<group>"; };
 		8FFC258E1A8E336500B49898 /* DspNode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DspNode.cpp; sourceTree = "<group>"; };
 		8FFC258F1A8E336500B49898 /* DspNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DspNode.h; sourceTree = "<group>"; };
@@ -50,6 +77,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FBD616D1A8E37F300F252C1 /* Carbon.framework in Frameworks */,
+				8FBD616B1A8E37EC00F252C1 /* CoreServices.framework in Frameworks */,
+				8FBD61681A8E37E400F252C1 /* AudioToolbox.framework in Frameworks */,
+				8FBD61711A8E39D000F252C1 /* libportaudio.a in Frameworks */,
+				8FBD61691A8E37E400F252C1 /* AudioUnit.framework in Frameworks */,
+				8FBD61651A8E37D700F252C1 /* CoreAudio.framework in Frameworks */,
 				8F580B751A78FF7A002A790B /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -60,6 +93,12 @@
 		8F580B451A78FEB0002A790B = {
 			isa = PBXGroup;
 			children = (
+				8FBD61701A8E39D000F252C1 /* libportaudio.a */,
+				8FBD616C1A8E37F300F252C1 /* Carbon.framework */,
+				8FBD616A1A8E37EC00F252C1 /* CoreServices.framework */,
+				8FBD61661A8E37E400F252C1 /* AudioToolbox.framework */,
+				8FBD61671A8E37E400F252C1 /* AudioUnit.framework */,
+				8FBD61641A8E37D700F252C1 /* CoreAudio.framework */,
 				8F580B741A78FF7A002A790B /* Accelerate.framework */,
 				8F580B501A78FEB0002A790B /* example */,
 				8F580B4F1A78FEB0002A790B /* Products */,
@@ -89,6 +128,7 @@
 				8F580B5D1A78FECB002A790B /* Dsp.h */,
 				8FFC25891A8E336500B49898 /* Context */,
 				8F580B5E1A78FECB002A790B /* Modules */,
+				8FC6E7581A90822000969509 /* Implementation */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -97,6 +137,8 @@
 			isa = PBXGroup;
 			children = (
 				8F580B651A78FECB002A790B /* DspModules.h */,
+				8FC0469D1A9399990083ED52 /* DspIo.cpp */,
+				8FC0469E1A9399990083ED52 /* DspIo.h */,
 				8F580B611A78FECB002A790B /* DspGenerator.cpp */,
 				8F580B621A78FECB002A790B /* DspGenerator.h */,
 				8F580B631A78FECB002A790B /* DspMath.cpp */,
@@ -106,15 +148,31 @@
 			path = ../../Modules;
 			sourceTree = "<group>";
 		};
+		8FC6E7581A90822000969509 /* Implementation */ = {
+			isa = PBXGroup;
+			children = (
+				8FC6E75A1A9086A500969509 /* DspPortAudio.cpp */,
+				8FC6E7591A90822000969509 /* DspPortAudio.h */,
+			);
+			name = Implementation;
+			path = ../../Implementation;
+			sourceTree = "<group>";
+		};
 		8FFC25891A8E336500B49898 /* Context */ = {
 			isa = PBXGroup;
 			children = (
-				8FFC258D1A8E336500B49898 /* DspError.h */,
 				8FFC25901A8E336500B49898 /* DspSignal.h */,
+				8FFC258D1A8E336500B49898 /* DspError.h */,
+				8FC046A01A94F6F30083ED52 /* DspIoput.cpp */,
+				8FC046A11A94F6F30083ED52 /* DspIoput.h */,
 				8FFC258E1A8E336500B49898 /* DspNode.cpp */,
 				8FFC258F1A8E336500B49898 /* DspNode.h */,
-				8FFC258A1A8E336500B49898 /* DspContext.cpp */,
-				8FFC258B1A8E336500B49898 /* DspContext.h */,
+				8FFC258A1A8E336500B49898 /* DspChain.cpp */,
+				8FFC258B1A8E336500B49898 /* DspChain.h */,
+				8F01F8271A9210C1008DEDC8 /* DspContext.cpp */,
+				8F01F8281A9210C1008DEDC8 /* DspContext.h */,
+				8F01F82A1A93194B008DEDC8 /* DspDevice.cpp */,
+				8FC6E7571A8E46C000969509 /* DspDevice.h */,
 			);
 			name = Context;
 			path = ../../Context;
@@ -177,8 +235,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				8F580B6F1A78FECB002A790B /* DspGenerator.cpp in Sources */,
-				8FFC25911A8E336500B49898 /* DspContext.cpp in Sources */,
+				8FC6E75B1A9086A500969509 /* DspPortAudio.cpp in Sources */,
+				8FFC25911A8E336500B49898 /* DspChain.cpp in Sources */,
+				8F01F8291A9210C1008DEDC8 /* DspContext.cpp in Sources */,
 				8F580B701A78FECB002A790B /* DspMath.cpp in Sources */,
+				8FC046A21A94F6F30083ED52 /* DspIoput.cpp in Sources */,
+				8FC0469F1A9399990083ED52 /* DspIo.cpp in Sources */,
+				8F01F82B1A93194B008DEDC8 /* DspDevice.cpp in Sources */,
 				8FFC25931A8E336500B49898 /* DspNode.cpp in Sources */,
 				8F580B521A78FEB0002A790B /* main.cpp in Sources */,
 			);
@@ -264,6 +327,19 @@
 		8F580B561A78FEB0002A790B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				FRAMEWORK_SEARCH_PATHS = ../ThirdParty/PortAudio/lib/.libs/;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/Pierre/GitHub/KiwiJuce/KiwiCore/KiwiDsp/ThirdParty/PortAudio/lib/.libs,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -271,6 +347,19 @@
 		8F580B571A78FEB0002A790B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				FRAMEWORK_SEARCH_PATHS = ../ThirdParty/PortAudio/lib/.libs/;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/Pierre/GitHub/KiwiJuce/KiwiCore/KiwiDsp/ThirdParty/PortAudio/lib/.libs,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

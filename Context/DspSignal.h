@@ -24,10 +24,88 @@
 #ifndef __DEF_KIWI_DSP_SIGNAL__
 #define __DEF_KIWI_DSP_SIGNAL__
 
-#include "DspError.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <cwchar>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <cstring>
+#include <algorithm>
+#include <memory>
+#include <cmath>
+#include <vector>
+#include <map>
+#include <list>
+#include <set>
+#include <deque>
+#include <thread>
+#include <exception>
+
+#ifdef __APPLE__
+#include <Accelerate/Accelerate.h>
+#endif
+
+using namespace std;
 
 namespace Kiwi
-{    
+{
+#ifndef ulong
+    typedef unsigned long ulong;
+#endif
+    
+#ifdef __KIWI_DSP_DOUBLE__
+    typedef double sample;
+#else
+    typedef float  sample;
+#endif
+    
+    class DspOutput;
+    class DspInput;
+    typedef shared_ptr<DspOutput>   sDspOutput;
+    typedef shared_ptr<DspInput>    sDspInput;
+    
+    class DspLink;
+    typedef shared_ptr<DspLink>         sDspLink;
+    typedef weak_ptr<DspLink>           wDspLink;
+    typedef shared_ptr<const DspLink>   scDspLink;
+    typedef weak_ptr<const DspLink>     wcDspLink;
+    
+    class DspNode;
+    typedef shared_ptr<DspNode>         sDspNode;
+    typedef weak_ptr<DspNode>           wDspNode;
+    typedef shared_ptr<const DspNode>   scDspNode;
+    typedef weak_ptr<const DspNode>     wcDspNode;
+    
+    class DspChain;
+    typedef shared_ptr<DspChain>        sDspChain;
+    typedef weak_ptr<DspChain>          wDspChain;
+    typedef shared_ptr<const DspChain>  scDspChain;
+    typedef weak_ptr<const DspChain>    wcDspChain;
+    
+    class DspContext;
+    typedef shared_ptr<DspContext>        sDspContext;
+    typedef weak_ptr<DspContext>          wDspContext;
+    typedef shared_ptr<const DspContext>  scDspContext;
+    typedef weak_ptr<const DspContext>    wcDspContext;
+    
+    class DspDeviceManager;
+    typedef shared_ptr<DspDeviceManager>        sDspDeviceManager;
+    typedef weak_ptr<DspDeviceManager>          wDspDeviceManager;
+    typedef shared_ptr<const DspDeviceManager>  scDspDeviceManager;
+    typedef weak_ptr<const DspDeviceManager>    wcDspDeviceManager;
+    
+    typedef set<weak_ptr<DspNode>, owner_less< weak_ptr<DspNode>>> DspNodeSet;
+    
+    enum DspMode : bool
+    {
+        Scalar = false,
+        Vector = true
+    };
+}
+
+namespace Kiwi
+{
     // ================================================================================ //
     //                                      SIGNAL                                      //
     // ================================================================================ //
@@ -69,6 +147,78 @@ namespace Kiwi
             cblas_dcopy((const int)vectorsize, in1, 1, out1, 1);
 #else
             memcpy(out1, in1, vectorsize * sizeof(double));
+#endif
+        }
+        
+        static inline void vinterleaved(const ulong vectorsize, const ulong nrow, const float* in1, float* out1)
+        {
+#if defined (__APPLE__) || defined(__CBLAS__)
+            for(ulong i = 0; i < nrow; i++)
+            {
+                cblas_scopy((const int)vectorsize, in1+i*vectorsize, 1, out1+i, (const int)nrow);
+            }
+#else
+            for(ulong i = 0; i < nrow; i++)
+            {
+                for(ulong j = 0; j < vectorsize; j++)
+                {
+                    *(out1++) = *(in1+nrow+j*nrow);
+                }
+            }
+#endif
+        }
+        
+        static inline void vinterleaved(const ulong vectorsize, const ulong nrow, const double* in1, double* out1)
+        {
+#if defined (__APPLE__) || defined(__CBLAS__)
+            for(ulong i = 0; i < nrow; i++)
+            {
+                cblas_dcopy((const int)vectorsize, in1+i*vectorsize, 1, out1+i, (const int)nrow);
+            }
+#else
+            for(ulong i = 0; i < nrow; i++)
+            {
+                for(ulong j = 0; j < vectorsize; j++)
+                {
+                    *(out1++) = *(in1+nrow+j*nrow);
+                }
+            }
+#endif
+        }
+        
+        static inline void vdeterleaved(const ulong vectorsize, const ulong nrow, const float* in1, float* out1)
+        {
+#if defined (__APPLE__) || defined(__CBLAS__)
+            for(ulong i = 0; i < nrow; i++)
+            {
+                cblas_scopy((const int)vectorsize, in1+i, (const int)nrow, out1+i*vectorsize, 1);
+            }
+#else
+            for(ulong i = 0; i < nrow; i++)
+            {
+                for(ulong j = 0; j < vectorsize; j++)
+                {
+                    *(out1++) = *(in1+nrow+j*nrow);
+                }
+            }
+#endif
+        }
+        
+        static inline void vdeterleaved(const ulong vectorsize, const ulong nrow, const double* in1, double* out1)
+        {
+#if defined (__APPLE__) || defined(__CBLAS__)
+            for(ulong i = 0; i < nrow; i++)
+            {
+                cblas_dcopy((const int)vectorsize, in1+i, (const int)nrow, out1+i*vectorsize, 1);
+            }
+#else
+            for(ulong i = 0; i < nrow; i++)
+            {
+                for(ulong j = 0; j < vectorsize; j++)
+                {
+                    *(out1++) = *(in1+nrow+j*nrow);
+                }
+            }
 #endif
         }
         

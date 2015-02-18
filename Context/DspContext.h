@@ -24,113 +24,127 @@
 #ifndef __DEF_KIWI_DSP_CONTEXT__
 #define __DEF_KIWI_DSP_CONTEXT__
 
-#include "DspNode.h"
+#include "DspChain.h"
 
-// TODO :
-// - Check thread safety
-// - Set io vectors to the context
-// - Math and FAUST compatibility for nodes (string)
-// - Clean The errors
 namespace Kiwi
 {
     // ================================================================================ //
     //                                      DSP CONTEXT                                 //
     // ================================================================================ //
     
-    //! The dsp context manages a set of dsp nodes and builds the dsp chain.
+    //! The dsp context manages a set of dsp chains.
     /**
-     The dsp context initializes a dsp chain with a set of nodes and links. To create a dsp chain, first, you should add the nodes, then add the links, then you have to compile the dsp context.
+     The dsp context
      */
-    class DspContext: public enable_shared_from_this<DspContext>
+    class DspContext : public enable_shared_from_this<DspContext>
     {
-    private:
-        vector<sDspNode>m_nodes;
-        mutable mutex   m_mutex;
-        ulong           m_samplerate;
-        ulong           m_vectorsize;
-        atomic_bool     m_compiled;
+        friend DspDeviceManager;
         
-        void sortDspNodes(set<sDspNode>& nodes, sDspNode node) throw(DspError<DspNode>&);
+    private:
+        const wDspDeviceManager m_device;
+        vector<sDspChain>       m_chains;
+        mutable mutex           m_mutex;
+        atomic_bool             m_running;
+        
+        //! Perform a tick on the dsp context.
+        /** The function calls once all the node methods of the dsp chains.
+         */
+        inline void tick() const noexcept
+        {
+            lock_guard<mutex> guard(m_mutex);
+            for(vector<sDspChain>::size_type i = 0; i < m_chains.size(); i++)
+            {
+                if(m_chains[i]->isRunning())
+                {
+                    m_chains[i]->tick();
+                }
+            }
+        }
+        
     public:
         
         //! The constructor.
         /** The function initialize and empty context.
+         @param device
          */
-        DspContext() noexcept;
+        DspContext(sDspDeviceManager device) noexcept;
         
         //! The destructor.
-        /** Stop the digital signal processing if needed and free the nodes.
+        /** Stop the digital signal processing if needed and free the chains.
          */
         ~DspContext();
         
-        //! Retrieve the sample rate of the context.
-        /** This function retrieves the sample rate of the context.
-         @return The sample rate of the context.
+        //! Retrieve the device manager of the context.
+        /** This function retrieves the sample rate of the chain.
+         @return The sample rate of the chain.
          */
-        inline ulong getSampleRate() const noexcept
+        inline sDspDeviceManager getDeviceManager() const noexcept
         {
-            return m_samplerate;
+            return m_device.lock();
         }
+        
+        //! Retrieve the sample rate of the context.
+        /** This function retrieves the sample rate of the chain.
+         @return The sample rate of the chain.
+         */
+        ulong getSampleRate() const noexcept;
         
         //! Retrieve the vector size of the context.
-        /** This function retrieves the vector size of the context.
-         @return The vector size of the context.
+        /** This function retrieves the vector size of the chain.
+         @return The vector size of the chain.
          */
-        inline ulong getVectorSize() const noexcept
+        ulong getVectorSize() const noexcept;
+        
+        //! Check if the dsp is running.
+        /** This function checks if the dsp is running.
+         @return True if the dsp is running otherwise it returns false.
+         */
+        inline bool isRunning() const noexcept
         {
-            return m_vectorsize;
+            return m_running;
         }
         
-        //! Check if the context is compiled.
-        /** This function checks if the context is compiled.
-         @return True if the context is compiled otherwise it returns false.
+        //! Retrieve the number of chains.
+        /** The function retrieves the number of chains.
+         @return The number of chains.
          */
-        inline bool isCompiled() const noexcept
-        {
-            return m_compiled;
-        }
-        
-        //! Retrieve the number of nodes.
-        /** The function retrieves the number of nodes.
-         @return The number of nodes.
-         */
-        inline ulong getNumberOfDspNodes() const noexcept
+        inline ulong getNumberOfChains() const noexcept
         {
             lock_guard<mutex> guard(m_mutex);
-            return (ulong)m_nodes.size();
+            return (ulong)m_chains.size();
         }
         
-        //! Add a node to the dsp context.
-        /** The function adds a node to the dsp context.
-         @param node The node to add.
+        //! Add a chain to the dsp context.
+        /** The function adds a chain to the dsp context.
+         @param chain The chain to add.
          */
-        void add(sDspNode node) throw(DspError<DspNode>&);
+        void add(sDspChain chain);
         
-        //! Add a link to the dsp context.
-        /** The function adds a link to the dsp context.
-         @param link The link to add.
+        //! Remove a chain from the dsp context.
+        /** The function removes a chain from the dsp context.
+         @param chain The chain to remove.
          */
-        void add(sDspLink link) throw(DspError<DspLink>&);
+        void remove(sDspChain chain);
         
-        //! Compile the dsp context.
-        /** The function sorts the dsp nodes and call the dsp methods of the nodes.
+        //! Start the dsp context.
+        /** The function starts the dsp.
          */
-        void compile(const ulong samplerate, const ulong vectorsize) throw(DspError<DspNode>&);
+        void start();
         
-        //! Perform a tick on the dsp context.
-        /** The function calls once all the node methods of the dsp nodes.
+        //! Resume the dsp context.
+        /** The function resume the dsp.
+         @param state The state of the dsp context.
          */
-        inline void tick() const
-        {
-            lock_guard<mutex> guard(m_mutex);
-            for(vector<sDspNode>::size_type i = 0; i < m_nodes.size(); i++)
-            {
-                m_nodes[i]->tick();
-            }
-        }
+        void resume(const bool state);
+        
+        //! Suspend the dsp context.
+        /** The function suspends the dsp.
+         @return The state of the dsp context.
+         */
+        bool suspend();
         
         //! Stop the dsp.
-        /** The function call the stop the dsp of all the nodes.
+        /** The function call the stop the dsp of all the chains.
          */
         void stop();
     };
