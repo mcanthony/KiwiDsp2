@@ -12,22 +12,6 @@
 
 using namespace Kiwi;
 
-static void do_sleep(ulong ms)
-{
-    this_thread::sleep_for(chrono::milliseconds(ms));
-}
-
-static void my_sleep(ulong ms)
-{
-    thread th = thread(do_sleep, ms);
-    
-    while(!th.joinable())
-    {
-        ;
-    }
-    th.join();
-}
-
 //==============================================================================
 int main (int argc, char* argv[])
 {

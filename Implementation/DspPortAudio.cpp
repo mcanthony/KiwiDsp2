@@ -57,11 +57,11 @@ namespace Kiwi
         m_driver = Pa_GetDefaultHostApi();
         m_device_input = Pa_GetDefaultInputDevice();
         m_device_output = Pa_GetDefaultOutputDevice();
-        m_ninputs = getMaximumNumberOfInputs();
-        m_noutputs = getMaximumNumberOfOutputs();
-        m_samplerate = getDefaultSampleRate();
+        m_ninputs = 2;
+        m_noutputs = 2;
+        m_samplerate = 44100;
         m_vectorsize = 256;
-        compile();
+        initialize();
     }
     
     PortAudioDeviceManager::~PortAudioDeviceManager()
@@ -90,7 +90,7 @@ namespace Kiwi
         cout << "Terminate" << endl;
     }
     
-    void PortAudioDeviceManager::getDriversNames(vector<string>& drivers) const
+    void PortAudioDeviceManager::getAvailableDrivers(vector<string>& drivers) const
     {
         drivers.clear();
         const PaHostApiIndex numHost = Pa_GetHostApiCount();
@@ -109,23 +109,7 @@ namespace Kiwi
         return Pa_GetHostApiInfo(m_driver)->name;
     }
     
-    void PortAudioDeviceManager::setDriver(string const& driver)
-    {
-        const PaHostApiIndex numHost = Pa_GetHostApiCount();
-        for(PaHostApiIndex i = 0; i < numHost; i++)
-        {
-            const PaHostApiInfo *hostInfo = Pa_GetHostApiInfo(i);
-            if(hostInfo && hostInfo->name == driver)
-            {
-                if(i != m_driver)
-                {
-                    m_driver = i;
-                }
-            }
-        }
-    }
-    
-    void PortAudioDeviceManager::getDevicesNames(vector<string>& devices) const
+    void PortAudioDeviceManager::getAvailableInputDevices(vector<string>& devices) const
     {
         devices.clear();
         const PaHostApiInfo *hostInfo = Pa_GetHostApiInfo(m_driver);
@@ -139,7 +123,33 @@ namespace Kiwi
                 deviceInfo = Pa_GetDeviceInfo(index);
                 if(deviceInfo)
                 {
-                    devices.push_back(deviceInfo->name);
+                    if(deviceInfo->maxInputChannels)
+                    {
+                        devices.push_back(deviceInfo->name);
+                    }
+                }
+            }
+        }
+    }
+    
+    void PortAudioDeviceManager::getAvailableOutputDevices(vector<string>& devices) const
+    {
+        devices.clear();
+        const PaHostApiInfo *hostInfo = Pa_GetHostApiInfo(m_driver);
+        if(hostInfo)
+        {
+            const PaDeviceInfo *deviceInfo;
+            const int numDevices = hostInfo->deviceCount;
+            for(int i = 0; i < numDevices; i++)
+            {
+                const PaDeviceIndex index = Pa_HostApiDeviceIndexToDeviceIndex(m_driver, i);
+                deviceInfo = Pa_GetDeviceInfo(index);
+                if(deviceInfo)
+                {
+                    if(deviceInfo->maxOutputChannels)
+                    {
+                        devices.push_back(deviceInfo->name);
+                    }
                 }
             }
         }
@@ -193,32 +203,6 @@ namespace Kiwi
         }
     }
     
-    ulong PortAudioDeviceManager::getMaximumNumberOfInputs() const
-    {
-        const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(m_device_input);
-        if(deviceInfo)
-        {
-            return (ulong)deviceInfo->maxInputChannels;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    
-    ulong PortAudioDeviceManager::getMaximumNumberOfOutputs() const
-    {
-        const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(m_device_output);
-        if(deviceInfo)
-        {
-            return (ulong)deviceInfo->maxOutputChannels;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    
     ulong PortAudioDeviceManager::getNumberOfInputs() const
     {
         return m_ninputs;
@@ -227,16 +211,6 @@ namespace Kiwi
     ulong PortAudioDeviceManager::getNumberOfOutputs() const
     {
         return m_noutputs;
-    }
-    
-    void PortAudioDeviceManager::setNumberOfInputs(ulong const ninputs)
-    {
-        m_ninputs = min(ninputs, getMaximumNumberOfInputs());
-    }
-    
-    void PortAudioDeviceManager::setNumberOfOutputs(ulong const noutputs)
-    {
-        m_noutputs = min(noutputs, getMaximumNumberOfOutputs());
     }
     
     void PortAudioDeviceManager::getAvailableSampleRates(vector<ulong>& samplerates) const
@@ -269,19 +243,6 @@ namespace Kiwi
             {
                 samplerates.push_back((double)(16000 * i));
             }
-        }
-    }
-    
-    ulong PortAudioDeviceManager::getDefaultSampleRate()
-    {
-        const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(m_device_output);
-        if(deviceInfo)
-        {
-            return (ulong)deviceInfo->defaultSampleRate;
-        }
-        else
-        {
-            return 0;
         }
     }
     
@@ -323,7 +284,7 @@ namespace Kiwi
         }
     }
     
-    void PortAudioDeviceManager::compile()
+    void PortAudioDeviceManager::initialize()
     {
         if(m_stream && Pa_IsStreamActive(m_stream))
         {
@@ -371,6 +332,46 @@ namespace Kiwi
         if(err != paNoError)
         {
             return;
+        }
+    }
+    
+    void PortAudioDeviceManager::setDriver(string const& driver)
+    {
+        const PaHostApiIndex numHost = Pa_GetHostApiCount();
+        for(PaHostApiIndex i = 0; i < numHost; i++)
+        {
+            const PaHostApiInfo *hostInfo = Pa_GetHostApiInfo(i);
+            if(hostInfo && hostInfo->name == driver)
+            {
+                if(i != m_driver)
+                {
+                    m_driver = i;
+                }
+            }
+        }
+    }
+    
+    sample const* PortAudioDeviceManager::getInputsSamples(const ulong channel) const noexcept
+    {
+        if(m_sample_ins && channel < getNumberOfInputs())
+        {
+            return m_sample_ins + channel * getVectorSize();
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    
+    sample* PortAudioDeviceManager::getOutputsSamples(const ulong channel) const noexcept
+    {
+        if(m_sample_outs && channel < getNumberOfOutputs())
+        {
+            return m_sample_outs + channel * getVectorSize();
+        }
+        else
+        {
+            return nullptr;
         }
     }
     
