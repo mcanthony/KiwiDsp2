@@ -32,6 +32,7 @@ namespace Kiwi
     
     DspContext::DspContext(sDspDeviceManager device) noexcept :
     m_device(device),
+    m_cpu_factor(0.),
     m_running(false)
     {
         
@@ -114,6 +115,7 @@ namespace Kiwi
             }
             device->add(shared_from_this());
             m_running = true;
+            m_cpu_factor = 10e-6 * (double)getSampleRate() / (double)getVectorSize();
         }
     }
     

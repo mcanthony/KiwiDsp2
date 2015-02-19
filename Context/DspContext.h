@@ -44,6 +44,8 @@ namespace Kiwi
         const wDspDeviceManager m_device;
         vector<sDspChain>       m_chains;
         mutable mutex           m_mutex;
+        mutable double          m_cpu;
+        double                  m_cpu_factor;
         atomic_bool             m_running;
         
         //! Perform a tick on the dsp context.
@@ -51,6 +53,7 @@ namespace Kiwi
          */
         inline void tick() const noexcept
         {
+            auto start = std::chrono::high_resolution_clock::now();
             lock_guard<mutex> guard(m_mutex);
             for(vector<sDspChain>::size_type i = 0; i < m_chains.size(); i++)
             {
@@ -59,6 +62,8 @@ namespace Kiwi
                     m_chains[i]->tick();
                 }
             }
+            auto end = std::chrono::high_resolution_clock::now();
+            m_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         }
         
     public:
@@ -112,6 +117,15 @@ namespace Kiwi
         {
             lock_guard<mutex> guard(m_mutex);
             return (ulong)m_chains.size();
+        }
+        
+        //! Retrieve the CPU of the context.
+        /** The function retrieves the CPU of the context.
+         @return The CPU of the context in percent.
+         */
+        inline double getCPU() const noexcept
+        {
+            return m_cpu * m_cpu_factor;
         }
         
         //! Add a chain to the dsp context.

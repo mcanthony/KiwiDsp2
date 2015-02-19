@@ -60,10 +60,6 @@ namespace Kiwi
          */
         ~JuceDeviceManager();
         
-        void start();
-        
-        void stop();
-        
         //! Retrieve the names of the available drivers.
         /** This function retrieves the names of the available drivers.
          @param drivers The names of the drivers.

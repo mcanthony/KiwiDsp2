@@ -339,8 +339,6 @@ namespace Kiwi
         }
     }
     
-    static double factor_time;
-    
     void JuceDeviceManager::audioDeviceAboutToStart(juce::AudioIODevice *device)
     {
         m_setup.bufferSize = m_device->getCurrentBufferSizeSamples();
@@ -359,7 +357,6 @@ namespace Kiwi
             m_output_matrix[i] = new sample[m_setup.bufferSize];
             Signal::vclear(m_setup.bufferSize, m_output_matrix[i]);
         }
-        factor_time = (double)m_setup.sampleRate / ((double)m_setup.bufferSize * 1000000.) ;
     }
     
     void JuceDeviceManager::audioDeviceStopped()
@@ -369,7 +366,6 @@ namespace Kiwi
     
     void JuceDeviceManager::audioDeviceIOCallback(const float** inputChannelData, int numInputChannels, float** outputChannelData, int numOutputChannels, int numSamples)
     {
-        auto start = std::chrono::high_resolution_clock::now();
 #ifdef __KIWI_DSP_DOUBLE__
         for(int i = 0; i < numInputChannels; i++)
         {
@@ -409,20 +405,6 @@ namespace Kiwi
             Signal::vclear(numSamples, m_output_matrix[i]);
         }
 #endif
-        auto end = std::chrono::high_resolution_clock::now();
-        
-        double elapsed_seconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout << "CPU : " << (double)(factor_time * (double)elapsed_seconds) << std::endl;
-    }
-    
-    void JuceDeviceManager::start()
-    {
-        initialize();
-    }
-    
-    void JuceDeviceManager::stop()
-    {
-        close();
     }
 }
 
