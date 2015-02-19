@@ -35,8 +35,8 @@ namespace Kiwi
     class DspDac : public DspNode
     {
     private:
-        vector<ulong>   m_channels;
-        vector<float*>  m_outputs;
+        vector<ulong>    m_channels;
+        vector<sample*>  m_outputs;
     public:
         DspDac(sDspChain chain, vector<ulong> const& channels = {}) noexcept;
         ~DspDac();

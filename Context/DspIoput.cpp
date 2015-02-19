@@ -62,6 +62,12 @@ namespace Kiwi
     void DspOutput::clear()
     {
         m_links.clear();
+        if(m_owner && m_vector)
+        {
+            delete [] m_vector;
+            m_vector = nullptr;
+        }
+        m_owner     = false;
     }
     
     void DspOutput::start(sDspNode node) throw(DspError&)
@@ -94,7 +100,7 @@ namespace Kiwi
                 {
                     throw DspError(node, DspError::Alloc);
                 }
-                
+                Signal::vclear(node->getVectorSize(), m_vector);
             }
         }
     }
@@ -140,6 +146,17 @@ namespace Kiwi
     void DspInput::clear()
     {
         m_links.clear();
+        if(m_vector)
+        {
+            delete [] m_vector;
+            m_vector = nullptr;
+        }
+        if(m_nothers && m_others)
+        {
+            delete [] m_others;
+            m_others = nullptr;
+        }
+        m_nothers   = 0;
     }
     
     void DspInput::start(sDspNode node) throw(DspError&)
@@ -206,7 +223,7 @@ namespace Kiwi
             {
                 throw DspError(node, DspError::Alloc);
             }
-            
+            Signal::vclear(node->getVectorSize(), m_vector);
         }
     }
     

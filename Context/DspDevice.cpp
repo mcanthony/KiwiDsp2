@@ -64,6 +64,41 @@ namespace Kiwi
             }
         }
     }
+    
+    bool DspDeviceManager::isDriverAvailable(string const& driver) const
+    {
+        vector<string> drivers;
+        getAvailableDrivers(drivers);
+        return find(drivers.begin(), drivers.end(), driver) != drivers.end();
+    }
+    
+    bool DspDeviceManager::isInputDeviceAvailable(string const& device) const
+    {
+        vector<string> devices;
+        getAvailableInputDevices(devices);
+        return find(devices.begin(), devices.end(), device) != devices.end();
+    }
+    
+    bool DspDeviceManager::isOutputDeviceAvailable(string const& device) const
+    {
+        vector<string> devices;
+        getAvailableOutputDevices(devices);
+        return find(devices.begin(), devices.end(), device) != devices.end();
+    }
+    
+    bool DspDeviceManager::isSampleRateAvailable(const ulong samplerate) const
+    {
+        vector<ulong> samplerates;
+        getAvailableSampleRates(samplerates);
+        return find(samplerates.begin(), samplerates.end(), samplerate) != samplerates.end();
+    }
+    
+    bool DspDeviceManager::isVectorSizeAvailable(const ulong vectorsize) const
+    {
+        vector<ulong> vectorsizes;
+        getAvailableVectorSizes(vectorsizes);
+        return find(vectorsizes.begin(), vectorsizes.end(), vectorsize) != vectorsizes.end();
+    }
 }
 
 

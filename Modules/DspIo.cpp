@@ -58,8 +58,12 @@ namespace Kiwi
             {
                 if(m_channels[i] <= device->getNumberOfOutputs())
                 {
-                    m_outputs.push_back(device->getOutputsSamples() + (m_channels[i] - 1) * getVectorSize());
-                    shouldPerform(true);
+                    sample* out = device->getOutputsSamples(m_channels[i] - 1);
+                    if(out)
+                    {
+                        m_outputs.push_back(device->getOutputsSamples(m_channels[i] - 1));
+                        shouldPerform(true);
+                    }
                 }
             }
         }

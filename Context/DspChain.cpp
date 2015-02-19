@@ -261,12 +261,15 @@ namespace Kiwi
     
     void DspChain::stop()
     {
-        lock_guard<mutex> guard(m_mutex);
-        for(vector<sDspNode>::size_type i = 0; i < m_nodes.size(); i++)
+        if(m_running)
         {
-            m_nodes[i]->stop();
+            m_running = false;
+            lock_guard<mutex> guard(m_mutex);
+            for(vector<sDspNode>::size_type i = 0; i < m_nodes.size(); i++)
+            {
+                m_nodes[i]->stop();
+            }
         }
-        m_running = false;
     }
     
     void DspChain::resume(const bool state) throw(DspError&)

@@ -121,6 +121,7 @@ namespace Kiwi
     {
         if(m_running)
         {
+            m_running = false;
             lock_guard<mutex> guard(m_mutex);
             for(vector<sDspNode>::size_type i = 0; i < m_chains.size(); i++)
             {
@@ -134,7 +135,6 @@ namespace Kiwi
             {
                 device->remove(shared_from_this());
             }
-            m_running = false;
         }
     }
     

@@ -50,7 +50,7 @@ namespace Kiwi
         vector<sDspNode>    m_nodes;
         vector<sDspLink>    m_links;
         mutable mutex       m_mutex;
-        bool                m_running;
+        atomic_bool         m_running;
         
         void sortNodes(set<sDspNode>& nodes, ulong& index, sDspNode node) throw(DspError&);
         

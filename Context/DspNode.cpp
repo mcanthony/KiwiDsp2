@@ -147,7 +147,7 @@ namespace Kiwi
             {
                 stop();
             }
-            m_running = true;
+
             m_samplerate = chain->getSampleRate();
             m_vectorsize = chain->getVectorSize();
             
@@ -188,6 +188,7 @@ namespace Kiwi
     
     void DspNode::stop()
     {
+        m_running = false;
         release();
         for(ulong i = 0; i < getNumberOfInputs(); i++)
         {
@@ -197,7 +198,6 @@ namespace Kiwi
         {
             m_outputs[i]->clear();
         }
-        m_running = false;
     }
 }
 
