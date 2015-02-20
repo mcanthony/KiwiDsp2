@@ -41,7 +41,7 @@ namespace Kiwi
     /**
      The dsp chain initializes a dsp chain with a set of nodes and links. To create a dsp chain, first, you should add the nodes, then add the links, then you have to compile the dsp chain.
      */
-    class DspChain: public enable_shared_from_this<DspChain>
+    class DspChain: public inheritable_enable_shared_from_this<DspChain>
     {
         friend DspContext;
         

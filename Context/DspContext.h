@@ -36,7 +36,7 @@ namespace Kiwi
     /**
      The dsp context
      */
-    class DspContext : public enable_shared_from_this<DspContext>
+    class DspContext : public inheritable_enable_shared_from_this<DspContext>
     {
         friend DspDeviceManager;
         
@@ -70,7 +70,7 @@ namespace Kiwi
         
         //! The constructor.
         /** The function initialize and empty context.
-         @param device
+         @param device The device manager.
          */
         DspContext(sDspDeviceManager device) noexcept;
         

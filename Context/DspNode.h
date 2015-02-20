@@ -36,7 +36,7 @@ namespace Kiwi
     /**
      The dsp node is a virtual class that performs the digital signal processing and manages input and output connections.
      */
-    class DspNode: public enable_shared_from_this<DspNode>
+    class DspNode: public inheritable_enable_shared_from_this<DspNode>
     {
         friend DspChain;
         friend DspOutput;

@@ -60,6 +60,29 @@ namespace Kiwi
     typedef float  sample;
 #endif
     
+#ifndef __KIWI_SHARED_FROM_THIS__
+#define __KIWI_SHARED_FROM_THIS__
+    class multiinheritable_enable_shared_from_this: public enable_shared_from_this<multiinheritable_enable_shared_from_this>
+    {
+    public:
+        virtual ~multiinheritable_enable_shared_from_this(){}
+    };
+    
+    template <class T> class inheritable_enable_shared_from_this : virtual public multiinheritable_enable_shared_from_this
+    {
+    public:
+        shared_ptr<T> shared_from_this() noexcept
+        {
+            return dynamic_pointer_cast<T>(multiinheritable_enable_shared_from_this::shared_from_this());
+        }
+        
+        shared_ptr<const T> shared_from_this() const noexcept
+        {
+            return dynamic_pointer_cast<const T>(multiinheritable_enable_shared_from_this::shared_from_this());
+        }
+    };
+#endif
+    
     class DspOutput;
     class DspInput;
     typedef shared_ptr<DspOutput>   sDspOutput;
