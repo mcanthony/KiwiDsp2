@@ -47,21 +47,20 @@ namespace Kiwi
         static ulong        m_nmanagers;
 
         PaHostApiIndex      m_driver;
-        PaDeviceIndex       m_device_input;
-        PaDeviceIndex       m_device_output;
-        ulong               m_ninputs;
-        ulong               m_noutputs;
+        PaStreamParameters  m_paraminput;
+        PaStreamParameters  m_paramoutput;
         ulong               m_samplerate;
         ulong               m_vectorsize;
+        
         PaStream*           m_stream;
         sample*             m_sample_ins;
         sample*             m_sample_outs;
         vector<sDspContext> m_contexts;
         mutable mutex       m_mutex;
         
-        void initialize();
+        void start();
         
-        void close();
+        void stop();
         
         inline void tick() const noexcept
         {

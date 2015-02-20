@@ -150,7 +150,7 @@ namespace Kiwi
 #endif
         }
         
-        static inline void vinterleaved(const ulong vectorsize, const ulong nrow, const float* in1, float* out1)
+        static inline void vinterleave(const ulong vectorsize, const ulong nrow, const float* in1, float* out1)
         {
 #if defined (__APPLE__) || defined(__CBLAS__)
             for(ulong i = 0; i < nrow; i++)
@@ -168,7 +168,7 @@ namespace Kiwi
 #endif
         }
         
-        static inline void vinterleaved(const ulong vectorsize, const ulong nrow, const double* in1, double* out1)
+        static inline void vinterleave(const ulong vectorsize, const ulong nrow, const double* in1, double* out1)
         {
 #if defined (__APPLE__) || defined(__CBLAS__)
             for(ulong i = 0; i < nrow; i++)
@@ -186,7 +186,7 @@ namespace Kiwi
 #endif
         }
         
-        static inline void vdeterleaved(const ulong vectorsize, const ulong nrow, const float* in1, float* out1)
+        static inline void vdeterleave(const ulong vectorsize, const ulong nrow, const float* in1, float* out1)
         {
 #if defined (__APPLE__) || defined(__CBLAS__)
             for(ulong i = 0; i < nrow; i++)
@@ -204,7 +204,7 @@ namespace Kiwi
 #endif
         }
         
-        static inline void vdeterleaved(const ulong vectorsize, const ulong nrow, const double* in1, double* out1)
+        static inline void vdeterleave(const ulong vectorsize, const ulong nrow, const double* in1, double* out1)
         {
 #if defined (__APPLE__) || defined(__CBLAS__)
             for(ulong i = 0; i < nrow; i++)

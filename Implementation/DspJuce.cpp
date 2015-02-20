@@ -42,7 +42,6 @@ namespace Kiwi
     JuceDeviceManager::~JuceDeviceManager()
     {
         close();
-        cout << "Terminate" << endl;
     }
     
     void JuceDeviceManager::getAvailableDrivers(vector<string>& drivers) const
