@@ -84,12 +84,15 @@ namespace Kiwi
     
     void DspDac::setChannels(vector<ulong> const& channels) noexcept
     {
-        
+        for(vector<ulong>::size_type i = 0; i < m_channels.size() && i < channels.size(); i++)
+        {
+            m_channels[i] = channels[i];
+        }
     }
     
-    void DspDac::getChannels(vector<ulong>& channels) noexcept
+    void DspDac::getChannels(vector<ulong>& channels) const noexcept
     {
-        
+        channels = m_channels;
     }
 }
 

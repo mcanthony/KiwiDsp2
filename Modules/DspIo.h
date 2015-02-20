@@ -45,7 +45,7 @@ namespace Kiwi
         void perform() noexcept override;
         void release() noexcept override;
         void setChannels(vector<ulong> const& channels) noexcept;
-        void getChannels(vector<ulong>& channels) noexcept;
+        void getChannels(vector<ulong>& channels) const noexcept;
     };
     
 }
