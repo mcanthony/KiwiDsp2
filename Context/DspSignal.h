@@ -122,8 +122,8 @@ namespace Kiwi
     
     enum DspMode : bool
     {
-        Scalar = false,
-        Vector = true
+        DspScalar = false,
+        DspVector = true
     };
 }
 

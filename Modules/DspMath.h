@@ -34,7 +34,7 @@ namespace Kiwi
     
     template <DspMode mode> class DspPlus;
     
-    template <>class DspPlus<Scalar> : public DspNode
+    template <>class DspPlus<DspScalar> : public DspNode
     {
     private:
         sample m_value;
@@ -49,7 +49,7 @@ namespace Kiwi
         sample getValue() const noexcept;
     };
     
-    template <>class DspPlus<Vector> : public DspNode
+    template <>class DspPlus<DspVector> : public DspNode
     {
     public:
         DspPlus(sDspChain chain) noexcept;

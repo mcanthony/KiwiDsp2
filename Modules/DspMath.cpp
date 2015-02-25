@@ -29,74 +29,74 @@ namespace Kiwi
     //                                      PLUS                                        //
     // ================================================================================ //
     
-    DspPlus<Scalar>::DspPlus(sDspChain chain, const sample value) noexcept : DspNode(chain, 1, 1),
+    DspPlus<DspScalar>::DspPlus(sDspChain chain, const sample value) noexcept : DspNode(chain, 1, 1),
     m_value(value)
     {
         ;
     }
     
-    DspPlus<Scalar>::~DspPlus()
+    DspPlus<DspScalar>::~DspPlus()
     {
         ;
     }
     
-    string DspPlus<Scalar>::getName() const noexcept
+    string DspPlus<DspScalar>::getName() const noexcept
     {
         return "Plus (scalar)";
     }
     
-    void DspPlus<Scalar>::prepare() noexcept
+    void DspPlus<DspScalar>::prepare() noexcept
     {
         shouldPerform(isOutputConnected(0));
     }
     
-    void DspPlus<Scalar>::perform() noexcept
+    void DspPlus<DspScalar>::perform() noexcept
     {
         Signal::vsadd(getVectorSize(), m_value, getOutputsSamples()[0]);
     }
     
-    void DspPlus<Scalar>::release() noexcept
+    void DspPlus<DspScalar>::release() noexcept
     {
         ;
     }
     
-    void DspPlus<Scalar>::setValue(const sample value) noexcept
+    void DspPlus<DspScalar>::setValue(const sample value) noexcept
     {
         m_value = value;
     }
     
-    sample DspPlus<Scalar>::getValue() const noexcept
+    sample DspPlus<DspScalar>::getValue() const noexcept
     {
         return m_value;
     }
     
-    DspPlus<Vector>::DspPlus(sDspChain chain) noexcept : DspNode(chain, 2, 1)
+    DspPlus<DspVector>::DspPlus(sDspChain chain) noexcept : DspNode(chain, 2, 1)
     {
         ;
     }
     
-    DspPlus<Vector>::~DspPlus()
+    DspPlus<DspVector>::~DspPlus()
     {
         ;
     }
     
-    string DspPlus<Vector>::getName() const noexcept
+    string DspPlus<DspVector>::getName() const noexcept
     {
         return "Plus (vector)";
     }
     
     
-    void DspPlus<Vector>::prepare() noexcept
+    void DspPlus<DspVector>::prepare() noexcept
     {
         shouldPerform(isOutputConnected(0));
     }
     
-    void DspPlus<Vector>::perform() noexcept
+    void DspPlus<DspVector>::perform() noexcept
     {
         Signal::vadd(getVectorSize(), getInputsSamples()[1], getOutputsSamples()[0]);
     }
     
-    void DspPlus<Vector>::release() noexcept
+    void DspPlus<DspVector>::release() noexcept
     {
         ;
     }
