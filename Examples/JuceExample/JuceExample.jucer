@@ -8,6 +8,18 @@
       <FILE id="rrd4GY" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
     <GROUP id="{837FFE4A-4C0C-A27A-7330-2FDAC004DC6F}" name="Sources">
+      <GROUP id="{95484C6A-7DFD-5308-C7B9-22E47F5A7C31}" name="Core">
+        <FILE id="aVJM4k" name="Core.h" compile="0" resource="0" file="../../Core/Core.h"/>
+        <FILE id="ZXucsM" name="Tools.h" compile="0" resource="0" file="../../Core/Tools.h"/>
+        <FILE id="Mv1h81" name="Tag.cpp" compile="1" resource="0" file="../../Core/Tag.cpp"/>
+        <FILE id="YutauO" name="Tag.h" compile="0" resource="0" file="../../Core/Tag.h"/>
+        <FILE id="TnrMwF" name="Atom.cpp" compile="1" resource="0" file="../../Core/Atom.cpp"/>
+        <FILE id="pjY3Tl" name="Atom.h" compile="0" resource="0" file="../../Core/Atom.h"/>
+        <FILE id="SqN3lA" name="Beacon.cpp" compile="1" resource="0" file="../../Core/Beacon.cpp"/>
+        <FILE id="sFPpy6" name="Beacon.h" compile="0" resource="0" file="../../Core/Beacon.h"/>
+        <FILE id="pPL0Xw" name="Clock.cpp" compile="1" resource="0" file="../../Core/Clock.cpp"/>
+        <FILE id="JoncF9" name="Clock.h" compile="0" resource="0" file="../../Core/Clock.h"/>
+      </GROUP>
       <GROUP id="{D24B39C5-3A27-2750-6791-49CFAF75AAA9}" name="Context">
         <FILE id="AJZjkc" name="DspSignal.h" compile="0" resource="0" file="../../Context/DspSignal.h"/>
         <FILE id="eBLBcC" name="DspError.h" compile="0" resource="0" file="../../Context/DspError.h"/>
