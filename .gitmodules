@@ -7,3 +7,6 @@
 [submodule "ThirdParty/RtAudio"]
 	path = ThirdParty/RtAudio
 	url = https://github.com/thestk/rtaudio.git
+[submodule "KiwiCore"]
+	path = KiwiCore
+	url = https://pierreguillot@github.com/KiwiMusic/KiwiCore.git
